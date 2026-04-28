@@ -9,6 +9,10 @@ generator client {
   // 모노레포 hoisting 회피 — 명시 경로로 client를 packages/db 내부에 생성.
   // packages/db/src/index.ts가 이 경로에서 PrismaClient를 import.
   output   = "../src/generated/client"
+  // 빌드 환경별 query engine binary 생성:
+  // - native: 개발 환경 (Windows/Mac/Linux 자동)
+  // - rhel-openssl-3.0.x: Vercel 함수 런타임 (AWS Lambda)
+  binaryTargets = ["native", "rhel-openssl-3.0.x"]
 }
 
 datasource db {
