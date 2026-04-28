@@ -118,6 +118,41 @@ export function canMutateFinanceWallet(role: Role): boolean {
   return hasAtLeast(role, 'ADMIN');
 }
 
+// ─────────────────────────────────────────────────────────────────────────
+// Phase 4 — 외부 통합 (AI / 메시징 / 백업) 정책 함수
+// Codex 08-phase4-integration-panels.md §권한 요구사항 반영
+// ─────────────────────────────────────────────────────────────────────────
+
+/** 통합 설정 페이지 진입 (settings/ai, /messaging, /backup). ADMIN 이상. */
+export function canViewIntegrationSettings(role: Role): boolean {
+  return hasAtLeast(role, 'ADMIN');
+}
+
+/** 통합 설정 변경 (API 키 등록/교체/삭제, 발신프로필 저장, 활성화). OWNER 전용. */
+export function canMutateIntegrationSettings(role: Role): boolean {
+  return role === 'OWNER';
+}
+
+/** 외부 provider 연결 테스트 1회 호출. 외부 쿼터 사용. ADMIN 이상. */
+export function canTestIntegrationConnection(role: Role): boolean {
+  return hasAtLeast(role, 'ADMIN');
+}
+
+/** 워크스페이스 데이터 export. ADMIN 이상. (audit 포함은 canExportAuditLog로 별도) */
+export function canExportWorkspaceData(role: Role): boolean {
+  return hasAtLeast(role, 'ADMIN');
+}
+
+/** AuditLog까지 포함한 export. OWNER 전용 (감사 데이터 외부 반출). */
+export function canExportAuditLog(role: Role): boolean {
+  return role === 'OWNER';
+}
+
+/** 백업 복구 (DB restore). OWNER 전용 + 별도 운영자 확인 프로세스 필요. */
+export function canRestoreBackup(role: Role): boolean {
+  return role === 'OWNER';
+}
+
 /**
  * 권한 매트릭스 한 행 — 도면의 "권한 매트릭스" 표를 렌더할 때 사용.
  * matrix를 코드 함수로 한 번에 생성해서 UI에서 표 형태로 보여준다.

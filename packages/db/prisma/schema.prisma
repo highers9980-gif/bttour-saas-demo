@@ -137,6 +137,14 @@ model Workspace {
   expenseAttachments     ExpenseAttachment[]
   exchangeRates          ExchangeRate[]
 
+  // Phase 4 통합 (AI / 메시징 / 백업)
+  aiSettings             WorkspaceAiSettings?
+  aiProviderConfigs      WorkspaceAiProviderConfig[]
+  aiJobs                 AiJob[]
+  messagingSettings      WorkspaceMessagingSettings?
+  backupSettings         WorkspaceBackupSettings?
+  backupExports          BackupExportJob[]
+
   @@index([deletedAt])
   @@map("workspaces")
 }
@@ -1090,4 +1098,259 @@ model ExchangeRate {
 
   @@index([workspaceId, baseCurrency, effectiveDate])
   @@map("exchange_rates")
+}
+
+// ═════════════════════════════════════════════════════════════════════════
+// Phase 4 — 외부 통합 (Hermes AI / 카카오 알림톡 / 백업)
+// Codex 08-phase4-integration-panels.md 명세 + 결정 사항 반영:
+//   - BYO API 키 모델 (워크스페이스가 자체 OpenAI/Gemini/Anthropic 키 등록)
+//   - Primary + Fallback (각 워크스페이스 1쌍)
+//   - AES-GCM envelope encryption (워크스페이스별 DEK + 시스템 KEK)
+//   - keyVersion snapshot — AiJob에 적용 비율 기록 (감사·재현)
+//   - 카카오는 구현만, Phase 4 초반 활성화 차단
+//   - 백업은 Neon PITR 자동 + 수동 export
+// ═════════════════════════════════════════════════════════════════════════
+
+enum IntegrationProvider {
+  OPENAI
+  GEMINI
+  ANTHROPIC
+}
+
+enum AiProviderRole {
+  PRIMARY
+  FALLBACK
+}
+
+enum ConnectionTestStatus {
+  NOT_TESTED
+  SUCCESS
+  FAILED
+}
+
+enum AiJobStatus {
+  QUEUED
+  RUNNING
+  SUCCEEDED
+  FAILED
+  CANCELLED
+  CANCELLED_KEY_ROTATED // 사용자가 "기존 키 즉시 폐기" 선택 시
+}
+
+enum MessagingProvider {
+  KAKAO_ALIMTALK
+  // ZALO, WECHAT 등은 Phase 5 이후
+}
+
+enum MessagingTemplateSyncStatus {
+  DISABLED
+  READY
+  ERROR
+}
+
+enum BackupExportFormat {
+  XLSX
+  JSON
+}
+
+enum BackupExportStatus {
+  QUEUED
+  RUNNING
+  SUCCEEDED
+  FAILED
+}
+
+enum BackupExportTrigger {
+  MANUAL  // 사용자가 직접 클릭
+  CRON    // Phase 5: Vercel Cron 자동 일별
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// AI 통합 설정
+// ─────────────────────────────────────────────────────────────────────────
+
+model WorkspaceAiSettings {
+  workspaceId String  @id
+  enabled     Boolean @default(false)
+
+  // 활성화 시점 + 마지막 연결 테스트 결과 캐시
+  enabledAt         DateTime?
+  lastTestedAt      DateTime?
+  lastTestStatus    ConnectionTestStatus @default(NOT_TESTED)
+  lastTestProvider  IntegrationProvider?
+  lastTestMessage   String?
+  lastTestLatencyMs Int?
+
+  // 시스템 크레딧 폴백 허용 (둘 다 실패 시 시스템 키로 호출 + AiCredit 차감)
+  allowSystemCreditFallback Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@map("workspace_ai_settings")
+}
+
+/// Primary/Fallback provider 별로 분리된 row.
+/// 워크스페이스당 role(PRIMARY/FALLBACK) 각 1개 unique.
+/// API 키는 AES-GCM으로 암호화: encryptedDek는 시스템 KEK로, apiKeyCiphertext는 DEK로 암호화.
+model WorkspaceAiProviderConfig {
+  id          String         @id @default(cuid())
+  workspaceId String
+  role        AiProviderRole
+
+  provider  IntegrationProvider
+  modelName String  // 자유 입력 (gpt-codex-auth-5.5, gemini-2.5-flash 등)
+
+  // Envelope encryption
+  apiKeyCiphertext Bytes
+  apiKeyIv         Bytes
+  apiKeyAuthTag    Bytes
+  encryptedDek     Bytes
+  dekKeyVersion    Int    @default(1) // 시스템 KEK 버전 (KEK 회전 대비)
+
+  apiKeyMasked  String // "sk-***...****1234" 표시용
+  apiKeyVersion Int    @default(1) // 키 변경마다 +1 (AiJob snapshot용)
+  keyUpdatedAt  DateTime
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@unique([workspaceId, role])
+  @@index([workspaceId, provider])
+  @@map("workspace_ai_provider_configs")
+}
+
+/// AI 작업 단위. keyVersion snapshot으로 키 변경 중에도 진행 중 작업 안전.
+model AiJob {
+  id          String      @id @default(cuid())
+  workspaceId String
+  agentKind   AiAgentKind
+
+  // 작업 생성 시점의 provider/model/keyVersion snapshot — 감사·재현
+  providerSnapshot      IntegrationProvider
+  modelSnapshot         String
+  apiKeyVersionSnapshot Int
+  roleSnapshot          AiProviderRole // PRIMARY로 시작했는지 FALLBACK이었는지
+
+  // 작업 입력/출력 (큰 payload는 별도 저장 권장 — 여기는 메타만)
+  refType     String? // "Expense", "GuideSettlement", "Receivable" 등
+  refId       String?
+  inputSummary  String? // 짧은 요약 (감사용, 원문은 저장 X)
+  outputSummary String?
+
+  status     AiJobStatus @default(QUEUED)
+  startedAt  DateTime?
+  finishedAt DateTime?
+  durationMs Int?
+  errorCode  String?
+  errorMessage String?
+
+  // AI 크레딧 차감 추적 (시스템 크레딧 모드 전용)
+  systemCreditUsed Int @default(0)
+
+  createdAt DateTime @default(now())
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@index([workspaceId, agentKind, createdAt])
+  @@index([workspaceId, status, createdAt])
+  @@map("ai_jobs")
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// 메시징 (카카오 알림톡 — Phase 4 초반 활성화 차단)
+// ─────────────────────────────────────────────────────────────────────────
+
+model WorkspaceMessagingSettings {
+  workspaceId String @id
+
+  enabled  Boolean @default(false)
+  provider MessagingProvider @default(KAKAO_ALIMTALK)
+
+  // 발신 프로필 (암호화 저장)
+  senderProfileKeyCiphertext Bytes?
+  senderProfileKeyIv         Bytes?
+  senderProfileKeyAuthTag    Bytes?
+  senderProfileKeyEncryptedDek Bytes?
+  senderProfileKeyDekKeyVersion Int @default(1)
+  senderProfileKeyMasked     String?
+  senderPhone                String?
+  senderName                 String?
+
+  templateSyncStatus MessagingTemplateSyncStatus @default(DISABLED)
+  templateSyncedAt   DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@map("workspace_messaging_settings")
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// 백업 (Neon PITR + 수동 export + Phase 5 자동 일별)
+// ─────────────────────────────────────────────────────────────────────────
+
+model WorkspaceBackupSettings {
+  workspaceId String @id
+
+  // Neon Postgres PITR (자동, Neon 자체 기능)
+  neonPitrEnabled       Boolean @default(true) // Free tier에서도 7일 자동
+  neonPitrRetentionDays Int     @default(7)
+
+  // 자동 일별 export (Phase 5 — Vercel Cron + Vercel Blob)
+  dailyBlobExportEnabled Boolean @default(false)
+  dailyBlobExportTime    String  @default("03:00") // KST 기준 HH:MM
+  dailyBlobRetentionDays Int     @default(30)
+
+  // 마지막 수동 export
+  lastManualExportAt     DateTime?
+  lastManualExportFormat BackupExportFormat?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@map("workspace_backup_settings")
+}
+
+model BackupExportJob {
+  id          String              @id @default(cuid())
+  workspaceId String
+  trigger     BackupExportTrigger
+  format      BackupExportFormat
+  status      BackupExportStatus  @default(QUEUED)
+
+  // export 범위 (사용자 선택)
+  scopeMasters     Boolean @default(true)
+  scopeOperations  Boolean @default(true)
+  scopeSettlements Boolean @default(true)
+  scopeFinance     Boolean @default(true)
+  scopeAudit       Boolean @default(false) // OWNER만 선택 가능
+
+  // 결과물
+  fileName       String?
+  fileSizeBytes  Int?
+  storageUrl     String? // Vercel Blob URL 또는 signed URL
+  downloadExpiresAt DateTime? // 만료 시간 (보안)
+
+  startedAt    DateTime?
+  finishedAt   DateTime?
+  durationMs   Int?
+  errorMessage String?
+
+  requestedById String?
+  createdAt     DateTime @default(now())
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@index([workspaceId, status, createdAt])
+  @@index([workspaceId, trigger, createdAt])
+  @@map("backup_export_jobs")
 }
