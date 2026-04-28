@@ -57,6 +57,9 @@ function receiptItemsFromForm(formData: FormData) {
 
 function normalizeActionError(error: unknown) {
   const raw = error instanceof Error ? error.message : String(error ?? '');
+  if (/AI_KEY_ENCRYPTION_SECRET/.test(raw)) {
+    return 'AI 키 암호화 환경변수가 설정되지 않았습니다. 운영 환경변수를 확인해 주세요.';
+  }
   return (
     raw
       .replace(/sk-[A-Za-z0-9_\-]+/g, '[REDACTED]')
