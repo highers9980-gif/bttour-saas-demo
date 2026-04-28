@@ -1,7 +1,7 @@
 // Phase 0 시드: Plan 카탈로그만 등록.
 // 도메인 데이터(Team/Schedule/Guide 등) 시드는 Phase 2 이후 추가한다.
 
-import { PrismaClient, PlanCode } from '../src/generated/client';
+import { PrismaClient, PlanCode } from '@prisma/client';
 
 const prisma = new PrismaClient();
 

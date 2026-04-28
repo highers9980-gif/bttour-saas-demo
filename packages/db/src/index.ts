@@ -1,6 +1,6 @@
 // Prisma client 싱글턴 (Next.js dev hot-reload 대응)
-// schema.prisma의 generator output에 맞춰 패키지 내부 경로에서 import.
-import { PrismaClient } from './generated/client';
+// 표준 위치(@prisma/client) 사용 — Vercel/Next.js 자동 trace 호환.
+import { PrismaClient } from '@prisma/client';
 
 const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;
@@ -17,4 +17,4 @@ if (process.env.NODE_ENV !== 'production') {
   globalForPrisma.prisma = prisma;
 }
 
-export * from './generated/client';
+export * from '@prisma/client';

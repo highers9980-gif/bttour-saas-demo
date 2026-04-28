@@ -21,7 +21,7 @@ import {
   ReceivableStatus,
   ExpenseStatus,
   PartnerKind,
-} from '../src/generated/client';
+} from '@prisma/client';
 
 const prisma = new PrismaClient();
 

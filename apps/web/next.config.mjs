@@ -12,12 +12,6 @@ const nextConfig = {
   transpilePackages: ['@bttour/ui', '@bttour/shared', '@bttour/db'],
   // 모노레포 루트 명시 — Vercel이 ../../packages/db도 trace 영역에 포함시키도록
   outputFileTracingRoot: path.join(__dirname, '../../'),
-  // Prisma query engine .so 파일을 함수 번들에 강제 포함 (Vercel rhel-openssl-3.0.x)
-  outputFileTracingIncludes: {
-    '/**/*': [
-      '../../packages/db/src/generated/client/**/*',
-    ],
-  },
   experimental: {
     serverActions: {
       bodySizeLimit: '4mb',
