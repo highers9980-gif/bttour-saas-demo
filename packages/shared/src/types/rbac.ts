@@ -45,10 +45,8 @@ export function canChangeRole(args: {
 
   if (actor === 'ADMIN') {
     // ADMIN은 MANAGER/VIEWER만 관리. ADMIN/OWNER 대상 변경 불가
-    const canTouchTarget =
-      targetCurrent === 'MANAGER' || targetCurrent === 'VIEWER';
-    const canAssignRole =
-      targetNewRole === 'MANAGER' || targetNewRole === 'VIEWER';
+    const canTouchTarget = targetCurrent === 'MANAGER' || targetCurrent === 'VIEWER';
+    const canAssignRole = targetNewRole === 'MANAGER' || targetNewRole === 'VIEWER';
     return canTouchTarget && canAssignRole;
   }
 
@@ -113,6 +111,11 @@ export function canApproveExpense(role: Role): boolean {
   return hasAtLeast(role, 'ADMIN');
 }
 
+/** 비용 생성·수정. OWNER/ADMIN/MANAGER 허용, VIEWER 거부. */
+export function canCreateExpense(role: Role): boolean {
+  return hasAtLeast(role, 'MANAGER');
+}
+
 /** FinanceWallet/Card 생성·수정. ADMIN 이상 (회계 마스터 책임자). */
 export function canMutateFinanceWallet(role: Role): boolean {
   return hasAtLeast(role, 'ADMIN');
@@ -164,9 +167,7 @@ export interface PermissionMatrixRow {
 }
 
 export function buildPermissionMatrix(): PermissionMatrixRow[] {
-  const rolesOf = (
-    fn: (role: Role) => boolean,
-  ): Record<Role, boolean> => ({
+  const rolesOf = (fn: (role: Role) => boolean): Record<Role, boolean> => ({
     OWNER: fn('OWNER'),
     ADMIN: fn('ADMIN'),
     MANAGER: fn('MANAGER'),
