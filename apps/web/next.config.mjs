@@ -12,6 +12,13 @@ const nextConfig = {
   transpilePackages: ['@bttour/ui', '@bttour/shared', '@bttour/db'],
   // 모노레포 루트 명시 — Vercel이 ../../packages/db도 trace 영역에 포함시키도록
   outputFileTracingRoot: path.join(__dirname, '../../'),
+  // Prisma .prisma/client (hoisted 루트 위치)를 함수 번들에 강제 포함
+  outputFileTracingIncludes: {
+    '/**/*': [
+      '../../node_modules/.prisma/client/**/*',
+      '../../node_modules/@prisma/client/**/*',
+    ],
+  },
   experimental: {
     serverActions: {
       bodySizeLimit: '4mb',
