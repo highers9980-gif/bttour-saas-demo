@@ -1,6 +1,6 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "buildCommand": "npm -w @bttour/db run generate && npm -w apps/web run build",
+  "buildCommand": "cd packages/db && npx prisma generate && cd ../../apps/web && npx next build",
   "installCommand": "npm install",
   "outputDirectory": "apps/web/.next",
   "framework": "nextjs",
