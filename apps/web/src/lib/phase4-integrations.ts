@@ -1,6 +1,13 @@
-import { createCipheriv, randomBytes } from 'node:crypto';
-import type { Role } from '@bttour/shared';
-import { hasAtLeast } from '@bttour/shared';
+import {
+  canExportWorkspaceData as sharedCanExportWorkspaceData,
+  canMutateIntegrationSettings as sharedCanMutateIntegrationSettings,
+  canTestIntegrationConnection as sharedCanTestIntegrationConnection,
+  canViewIntegrationSettings as sharedCanViewIntegrationSettings,
+  decryptApiKey,
+  encryptApiKey,
+  testConnection,
+  type Role,
+} from '@bttour/shared';
 
 export type IntegrationProvider = 'OPENAI' | 'GEMINI' | 'ANTHROPIC';
 export type AiProviderRole = 'PRIMARY' | 'FALLBACK';
@@ -23,19 +30,19 @@ export function modelDelegate(prisma: unknown, name: string): PrismaDelegate | n
 }
 
 export function canViewIntegrationSettings(role: Role) {
-  return hasAtLeast(role, 'ADMIN');
+  return sharedCanViewIntegrationSettings(role);
 }
 
 export function canMutateIntegrationSettings(role: Role) {
-  return role === 'OWNER';
+  return sharedCanMutateIntegrationSettings(role);
 }
 
 export function canTestIntegrationConnection(role: Role) {
-  return hasAtLeast(role, 'ADMIN');
+  return sharedCanTestIntegrationConnection(role);
 }
 
 export function canExportWorkspaceData(role: Role) {
-  return hasAtLeast(role, 'ADMIN');
+  return sharedCanExportWorkspaceData(role);
 }
 
 export function maskSecret(secret: string) {
@@ -56,27 +63,7 @@ export interface EncryptedSecret {
 }
 
 export function encryptSecret(secret: string): EncryptedSecret {
-  const masked = maskSecret(secret);
-  if (!masked) {
-    throw new Error('EMPTY_SECRET');
-  }
-
-  // Claude의 packages/shared/src/crypto가 병합되기 전까지 사용하는 임시 AES-GCM 어댑터.
-  // 원문은 반환하지 않고, DB 저장용 Buffer와 마스킹 문자열만 만든다.
-  const dek = randomBytes(32);
-  const iv = randomBytes(12);
-  const cipher = createCipheriv('aes-256-gcm', dek, iv);
-  const ciphertext = Buffer.concat([cipher.update(secret, 'utf8'), cipher.final()]);
-  const authTag = cipher.getAuthTag();
-
-  return {
-    ciphertext,
-    iv,
-    authTag,
-    encryptedDek: Buffer.from(dek),
-    dekKeyVersion: 1,
-    masked,
-  };
+  return encryptApiKey(secret);
 }
 
 export interface ConnectionTestResult {
@@ -86,20 +73,25 @@ export interface ConnectionTestResult {
 }
 
 export async function testProviderConnection({
-  apiKeyAvailable,
+  encryptedKey,
   modelName,
   provider,
 }: {
-  apiKeyAvailable: boolean;
+  encryptedKey?: {
+    ciphertext: Buffer;
+    iv: Buffer;
+    authTag: Buffer;
+    encryptedDek: Buffer;
+    dekKeyVersion: number;
+  } | null;
   modelName: string;
   provider: IntegrationProvider;
 }): Promise<ConnectionTestResult> {
-  const startedAt = Date.now();
-  if (!apiKeyAvailable) {
+  if (!encryptedKey) {
     return {
       status: 'FAILED',
       message: '저장된 API 키가 없습니다.',
-      latencyMs: Date.now() - startedAt,
+      latencyMs: 0,
     };
   }
 
@@ -107,15 +99,12 @@ export async function testProviderConnection({
     return {
       status: 'FAILED',
       message: '모델명을 입력해야 연결 테스트를 실행할 수 있습니다.',
-      latencyMs: Date.now() - startedAt,
+      latencyMs: 0,
     };
   }
 
-  return {
-    status: 'SUCCESS',
-    message: `${provider} 연결 테스트 어댑터 준비 완료. Claude shared AI adapter 병합 후 실제 외부 호출로 전환됩니다.`,
-    latencyMs: Date.now() - startedAt,
-  };
+  const apiKey = decryptApiKey(encryptedKey);
+  return testConnection({ provider, modelName, apiKey, timeoutMs: 8000 });
 }
 
 export function auditMetadata(data: Record<string, unknown>) {

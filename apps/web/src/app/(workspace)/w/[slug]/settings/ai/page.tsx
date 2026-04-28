@@ -31,6 +31,11 @@ interface ProviderConfigRow {
   role: AiProviderRole;
   provider: IntegrationProvider;
   modelName: string;
+  apiKeyCiphertext: Buffer;
+  apiKeyIv: Buffer;
+  apiKeyAuthTag: Buffer;
+  encryptedDek: Buffer;
+  dekKeyVersion: number;
   apiKeyMasked: string;
   apiKeyVersion: number;
   keyUpdatedAt: Date;
@@ -242,7 +247,15 @@ async function testAiConnection(formData: FormData) {
       : null,
   ) as ProviderConfigRow | null;
   const result = await testProviderConnection({
-    apiKeyAvailable: Boolean(config?.apiKeyMasked),
+    encryptedKey: config
+      ? {
+          ciphertext: config.apiKeyCiphertext,
+          iv: config.apiKeyIv,
+          authTag: config.apiKeyAuthTag,
+          encryptedDek: config.encryptedDek,
+          dekKeyVersion: config.dekKeyVersion,
+        }
+      : null,
     modelName: config?.modelName ?? '',
     provider: config?.provider ?? 'OPENAI',
   });
