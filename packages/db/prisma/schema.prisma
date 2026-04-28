@@ -38,6 +38,7 @@ model User {
   sessions    Session[]
   memberships Membership[]
   invitesSent Invitation[] @relation("InvitedBy")
+  receiptOcrJobs ReceiptOcrJob[]
 
   @@map("users")
 }
@@ -144,6 +145,7 @@ model Workspace {
   messagingSettings      WorkspaceMessagingSettings?
   backupSettings         WorkspaceBackupSettings?
   backupExports          BackupExportJob[]
+  receiptOcrJobs         ReceiptOcrJob[]
 
   @@index([deletedAt])
   @@map("workspaces")
@@ -1137,6 +1139,13 @@ enum AiJobStatus {
   CANCELLED_KEY_ROTATED // 사용자가 "기존 키 즉시 폐기" 선택 시
 }
 
+enum ReceiptOcrJobStatus {
+  PENDING
+  RUNNING
+  SUCCESS
+  FAILED
+}
+
 enum MessagingProvider {
   KAKAO_ALIMTALK
   // ZALO, WECHAT 등은 Phase 5 이후
@@ -1259,6 +1268,38 @@ model AiJob {
   @@index([workspaceId, agentKind, createdAt])
   @@index([workspaceId, status, createdAt])
   @@map("ai_jobs")
+}
+
+/// 영수증 사진 1장 OCR 작업.
+/// AiJob보다 원본 이미지/추출 JSON/Expense 연결 필드가 많아 별도 모델로 분리한다.
+model ReceiptOcrJob {
+  id          String              @id @default(cuid())
+  workspaceId String
+  workspace   Workspace           @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  imageMimeType String
+  imageBase64   String            @db.Text
+  imageBytes    Int
+
+  provider   IntegrationProvider
+  modelName  String
+  keyVersion Int
+  status     ReceiptOcrJobStatus  @default(PENDING)
+
+  extractedData Json?
+  errorCode     String?
+  errorMessage  String?
+  latencyMs     Int?
+  expenseId     String?
+
+  createdById String
+  createdBy   User                @relation(fields: [createdById], references: [id])
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+
+  @@index([workspaceId, status])
+  @@index([workspaceId, createdAt(sort: Desc)])
+  @@map("receipt_ocr_jobs")
 }
 
 // ─────────────────────────────────────────────────────────────────────────
