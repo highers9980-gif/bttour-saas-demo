@@ -2,6 +2,7 @@ import { Badge, Button, Card, DataTable, EmptyState, KpiCard, MobileCardList } f
 import {
   canApproveExpense,
   canCancelSettlement,
+  canCreateExpense,
   canMutateSettlement,
   computeVat10,
   formatWonDisplay,
@@ -11,6 +12,7 @@ import { prisma } from '@bttour/db';
 import Link from 'next/link';
 import { revalidatePath } from 'next/cache';
 import { assertWorkspace, requireWorkspace } from '@/lib/workspace-guard';
+import { ReceiptScanModal } from '@/components/expense/ReceiptScanModal';
 import { ExpenseFormButton, type ExpenseFormValue, type ExpenseOption } from './ExpenseFormButton';
 
 type ExpenseTabStatus = 'PENDING_APPROVAL' | 'APPROVED' | 'REJECTED';
@@ -198,8 +200,9 @@ export default async function ExpensePage({
   const canMutate = canMutateSettlement(role);
   const canApprove = canApproveExpense(role);
   const canCancel = canCancelSettlement(role);
+  const canScanReceipt = canCreateExpense(role);
 
-  const [expenses, teams] = await Promise.all([
+  const [expenses, teams, aiSettings, primaryAiConfig] = await Promise.all([
     prisma.expense.findMany({
       where: { workspaceId: workspace.id, deletedAt: null, status: activeStatus },
       include: { attachments: true, team: { include: { partner: true } } },
@@ -211,7 +214,12 @@ export default async function ExpensePage({
       orderBy: [{ startDate: 'desc' }, { teamNo: 'desc' }],
       take: 120,
     }),
+    prisma.workspaceAiSettings.findUnique({ where: { workspaceId: workspace.id } }),
+    prisma.workspaceAiProviderConfig.findUnique({
+      where: { workspaceId_role: { workspaceId: workspace.id, role: 'PRIMARY' } },
+    }),
   ]);
+  const showReceiptScanner = canScanReceipt && Boolean(aiSettings?.enabled && primaryAiConfig);
 
   const teamOptions: ExpenseOption[] = teams.map((team) => ({
     id: team.id,
@@ -364,9 +372,9 @@ export default async function ExpensePage({
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
-          <Button variant="outline" disabled>
-            OCR 업로드
-          </Button>
+          {showReceiptScanner && (
+            <ReceiptScanModal canScan={showReceiptScanner} workspaceSlug={params.slug} />
+          )}
           <form action={bulkApproveExpenses}>
             <input type="hidden" name="workspaceSlug" value={params.slug} />
             <Button
