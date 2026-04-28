@@ -29,6 +29,9 @@ const credentialsSchema = z.object({
  *    함께 재도입한다 (조건부 활성).
  */
 export const { handlers, auth, signIn, signOut } = NextAuth({
+  // Vercel/프록시 환경에서 host 헤더를 신뢰 — AUTH_URL Sensitive 환경변수가
+  // Edge runtime에서 누락되어 base URL이 null로 평가되는 문제 회피.
+  trustHost: true,
   session: { strategy: 'jwt' },
   pages: {
     signIn: '/signin',
