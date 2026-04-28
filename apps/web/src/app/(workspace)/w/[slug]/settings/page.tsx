@@ -3,6 +3,27 @@ import { canMutateMaster } from '@bttour/shared';
 import Link from 'next/link';
 import { requireWorkspace } from '@/lib/workspace-guard';
 
+const integrationCards = [
+  {
+    title: 'Hermes AI',
+    description: 'OpenAI, Gemini, Anthropic BYO 키와 모델명을 연결합니다.',
+    href: 'ai',
+    label: '🤖',
+  },
+  {
+    title: '카카오 알림톡',
+    description: '발신 프로필과 템플릿 초안을 저장합니다. 현재는 비활성 상태입니다.',
+    href: 'messaging',
+    label: '🟡',
+  },
+  {
+    title: '데이터 백업',
+    description: 'Neon PITR 상태와 수동 export, Phase 5 일별 백업 설정을 관리합니다.',
+    href: 'backup',
+    label: '💾',
+  },
+] as const;
+
 const masterCards = [
   {
     title: '가이드',
@@ -71,6 +92,30 @@ export default async function SettingsPage({ params }: { params: { slug: string 
         </div>
       </Card>
 
+      <div>
+        <div className="mb-3 flex items-center justify-between">
+          <h2 className="text-base font-bold text-navy-900">통합 패널</h2>
+          <span className="text-xs font-semibold text-slate-500">Phase 4</span>
+        </div>
+        <div className="grid gap-4 md:grid-cols-3">
+          {integrationCards.map((card) => (
+            <Link key={card.href} href={`/w/${params.slug}/settings/${card.href}`}>
+              <Card hover padding="lg" className="h-full">
+                <div className="mb-4 grid h-10 w-10 place-items-center rounded-lg bg-orange-50 text-xl">
+                  {card.label}
+                </div>
+                <h3 className="mb-2 text-base font-bold text-navy-900">{card.title}</h3>
+                <p className="text-sm leading-relaxed text-slate-500">{card.description}</p>
+              </Card>
+            </Link>
+          ))}
+        </div>
+      </div>
+
+      <div className="mb-3 flex items-center justify-between">
+        <h2 className="text-base font-bold text-navy-900">마스터 관리</h2>
+        <span className="text-xs font-semibold text-slate-500">운영 기본 데이터</span>
+      </div>
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
         {masterCards.map((card) => (
           <Link key={card.href} href={`/w/${params.slug}/settings/${card.href}`}>
