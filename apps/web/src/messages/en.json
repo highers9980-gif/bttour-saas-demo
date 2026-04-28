@@ -1,0 +1,336 @@
+{
+  "common": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "approve": "Approve",
+    "reject": "Reject",
+    "edit": "Edit",
+    "delete": "Delete",
+    "add": "Add",
+    "search": "Search",
+    "all": "All",
+    "list": "List",
+    "refresh": "Refresh",
+    "export": "Export",
+    "export_excel": "Export to Excel",
+    "copy": "Copy",
+    "send": "Send",
+    "recharge": "Recharge",
+    "next": "Next",
+    "back": "Back",
+    "view_all": "View All",
+    "view_all_arrow": "View All →",
+    "workspace": "Workspace",
+    "logout": "Logout",
+    "login": "Login",
+    "signup": "Sign up",
+    "loading": "Loading...",
+    "empty": "No data",
+    "retry": "Retry"
+  },
+  "status": {
+    "in_progress": "In Progress",
+    "scheduled": "Scheduled",
+    "done": "Done",
+    "pending": "Pending",
+    "partial": "Partial",
+    "unassigned": "Unassigned",
+    "unpaid": "Unpaid",
+    "paid": "Paid",
+    "active": "Active",
+    "suspicious": "Suspicious"
+  },
+  "unit": {
+    "item": "items",
+    "person": "people",
+    "team": "teams",
+    "krw": "KRW"
+  },
+  "nav": {
+    "group_operations": "Operations",
+    "group_settlement": "Settlement",
+    "group_accounting": "Accounting",
+    "group_statistics": "Analytics",
+    "group_admin": "Admin",
+    "dashboard": "Dashboard",
+    "schedule": "Schedule",
+    "team_timeline": "Team Timeline",
+    "hotel_calendar": "Hotel Calendar",
+    "guide_settlement": "Guide Settlement",
+    "vehicle": "Vehicle Cost",
+    "shopping_fee": "Shopping Commission",
+    "receivables": "Receivables",
+    "finance": "Bank & Card",
+    "expense": "Expenses",
+    "revenue": "Revenue",
+    "statistics": "Analytics",
+    "guide_recommend": "Guide Recommend",
+    "user_management": "User Mgmt",
+    "settings": "Workspace Settings",
+    "billing": "Billing & Plan"
+  },
+  "auth": {
+    "login": {
+      "title": "Login",
+      "welcome_back": "Welcome back to BT TOUR ERP.",
+      "email_or_id": "Email or ID",
+      "password": "Password",
+      "workspace": "Workspace",
+      "workspace_hint": "Your company's workspace name",
+      "remember": "Remember me (30d)",
+      "forgot_password": "Forgot password",
+      "with_kakao": "Login with Kakao",
+      "with_google": "Login with Google",
+      "no_account": "Don't have an account yet?",
+      "free_signup": "Sign up free",
+      "dev_mode": "Development mode — test accounts",
+      "dev_mode_remove": "This box is removed in production.",
+      "invalid_credentials": "Email or password is incorrect.",
+      "workspace_required": "Enter workspace"
+    },
+    "brand": {
+      "badge": "For Korea·China·Vietnam inbound agencies",
+      "headline_1": "Today as well,",
+      "headline_highlight": "settlement officer",
+      "headline_2": "stop overtime work",
+      "description": "Guide settlement, shopping commission, receivables, hotels, and vehicle costs in one screen."
+    },
+    "signup": {
+      "have_account": "Already have an account?",
+      "step_company": "Choose Company",
+      "step_account": "Account Info",
+      "step_done": "Complete",
+      "company_title": "Select your company",
+      "company_desc": "Register a new company or join an existing workspace.",
+      "new_company": "Register New Company",
+      "new_company_desc": "Your company is signing up for the first time. You become the Owner automatically.",
+      "join_company": "Join Existing Company",
+      "join_company_desc": "Your company is already using it. Admin approval required.",
+      "company_name": "Company Name",
+      "workspace_id": "Workspace ID",
+      "workspace_id_hint": "Used at login. Lowercase letters and hyphens only.",
+      "starting_plan": "Starting Plan",
+      "account_title": "Enter Account Info",
+      "account_desc": "Information used at login.",
+      "name": "Name",
+      "phone": "Phone",
+      "email": "Email",
+      "password_confirm": "Confirm Password",
+      "password_hint": "Recommend 8+ chars: letters, digits, symbols",
+      "agree_all": "Agree to all",
+      "terms": "I agree to Terms of Service",
+      "privacy": "I agree to data collection",
+      "ai_transfer": "I agree to AI processing and overseas transfer",
+      "marketing": "I agree to marketing notifications",
+      "submit": "Submit Application",
+      "success_title": "Sign-up Complete!",
+      "pending_title": "Awaiting Admin Approval"
+    }
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "kpi": {
+      "month_revenue": "This Month's Revenue",
+      "month_profit": "This Month's Profit",
+      "active_teams": "Active Teams",
+      "receivables_balance": "Receivables Balance",
+      "over_30_days": "Over 30 days"
+    },
+    "weekly_teams": "This Week's Teams",
+    "assign_guide": "Assign Guide",
+    "ai": {
+      "title": "Hermes AI Automation",
+      "subtitle": "Supervise → Parallel execution → Verify",
+      "running": "Running",
+      "completed_today": "Processed Today",
+      "queue": "Queue",
+      "avg_time": "Avg processing time"
+    },
+    "queue": {
+      "title": "KakaoTalk Queue",
+      "settlement_notice": "Settlement Notice",
+      "receivable_reminder": "Receivable Reminder",
+      "hotel_confirmed": "Hotel Booking Confirmed"
+    },
+    "quick": {
+      "title": "Quick Actions",
+      "new_team": "New Team",
+      "upload_receipt": "Upload Receipt",
+      "start_month_end": "Start Month-End",
+      "monthly_report": "Generate Monthly Report"
+    },
+    "fx": {
+      "title": "Live FX"
+    },
+    "empty": {
+      "title": "No operations data yet",
+      "cta": "Create first team"
+    }
+  },
+  "schedule": {
+    "title": "Schedule",
+    "subtitle": "Monthly team operations",
+    "view": {
+      "list": "List",
+      "calendar": "Calendar",
+      "gantt": "Gantt"
+    },
+    "new_team": "New Team",
+    "search_placeholder": "Search team/agency",
+    "filter": {
+      "guide_all": "Guide: All",
+      "hotel_all": "Hotel: All",
+      "status_all": "Status: All",
+      "origin_all": "Origin: All"
+    },
+    "timeline": {
+      "title": "Team Timeline"
+    },
+    "hotel_calendar": {
+      "title": "Hotel Calendar",
+      "add_reservation": "Add Reservation",
+      "include_next_month": "Include next 7 days"
+    }
+  },
+  "settlement": {
+    "guide": {
+      "title": "Guide Settlement",
+      "bulk_kakao": "Bulk KakaoTalk",
+      "download_pdf": "Download Statement PDF",
+      "review_statement": "Review Statements →",
+      "unpaid": "Unpaid",
+      "paid": "Paid"
+    },
+    "vehicle": {
+      "title": "Vehicle Cost",
+      "title_full": "Vehicle Settlement",
+      "add_trip": "Add Trip",
+      "distribution": "Trips by Vehicle Type",
+      "driver_summary": "Driver Trips & Settlement"
+    },
+    "shopping": {
+      "title": "Shopping Commission",
+      "add_sale": "Add Sales",
+      "guide_incentive": "Guide Shopping Incentive",
+      "center_settlement": "Center Commission Settlement",
+      "recent_sales": "Recent Shopping Sales"
+    },
+    "receivable": {
+      "title": "Receivables",
+      "by_partner": "Receivables by Partner",
+      "add": "Add Receivable",
+      "bulk_reminder": "Bulk Reminder",
+      "review_message": "Review Messages →"
+    }
+  },
+  "finance": {
+    "title": "Bank & Card",
+    "add_transaction": "Add Transaction",
+    "import_statement": "Import Statement",
+    "cards": "Cards",
+    "bank_accounts": "Bank Accounts",
+    "fx": "FX & Exchange",
+    "usd_holding": "USD Holdings",
+    "vnd_holding": "VND Holdings",
+    "exchange_history": "Exchange History"
+  },
+  "expense": {
+    "title": "Expenses",
+    "ocr_processing": "Hermes AI OCR Processing",
+    "pending_approval": "Awaiting Approval",
+    "bulk_approve": "Bulk Approve",
+    "upload_receipt": "Upload Receipt",
+    "manual_input": "Manual Input",
+    "recent": "Recent Expenses"
+  },
+  "analytics": {
+    "revenue": {
+      "title": "Revenue & Profit Dashboard",
+      "monthly_chart": "Monthly Revenue / Profit",
+      "year_compare": "Yearly Revenue & Profit Comparison",
+      "guide_top5": "Guide Performance"
+    },
+    "statistics": {
+      "title": "Analytics",
+      "guide_performance": "Guide Overall Performance",
+      "agent_revenue": "Revenue by Agent",
+      "hotel_occupancy": "Hotel Occupancy & Revenue",
+      "origin_distribution": "Origin Distribution"
+    },
+    "guide_recommend": {
+      "title": "Guide Recommendation",
+      "unassigned_teams": "Unassigned Teams",
+      "assigned_done": "Assigned",
+      "conflict_detected": "Guide conflict detected"
+    }
+  },
+  "admin": {
+    "users": {
+      "title": "User Management",
+      "subtitle": "Workspace members · Sign-ups · Invitations",
+      "invite_member": "Invite Member",
+      "active_users": "Active Users",
+      "pending": "Pending",
+      "invitations": "Invitations",
+      "user": "User",
+      "email": "Email",
+      "role": "Role",
+      "last_login": "Last Login",
+      "status": "Status",
+      "manage": "Manage",
+      "change_role": "Change Role",
+      "adjust_role": "Adjust Role",
+      "new_invite": "Invite a New Member",
+      "invite_desc": "Invite link sent via KakaoTalk/email. Recipient activates after setting password.",
+      "resend": "Resend",
+      "cancel_invite": "Cancel Invitation",
+      "permission_matrix": "Permission Matrix",
+      "billing_permission": "Billing · Subscription · Cancel",
+      "member_permission": "Approve users · Change roles",
+      "settlement_permission": "Create / Edit / Delete settlements",
+      "master_permission": "Guide / Partner masters",
+      "export_permission": "Data export",
+      "suspicious_reason_external_admin": "External email + ADMIN role + empty bio"
+    }
+  },
+  "marketing": {
+    "hero": {
+      "title": "Replace one settlement officer with a system",
+      "subtitle": "Integrated Settlement SaaS for inbound agencies",
+      "demo": "View Demo",
+      "signup": "Sign up free"
+    },
+    "section": {
+      "problems": "Does monthly settlement look like this?",
+      "solution": "In one screen, 24/7, automatically",
+      "features": "Two advantages competitors cannot follow",
+      "pricing": "At 11% of a settlement officer's labor cost",
+      "faq": "FAQ"
+    },
+    "feature": {
+      "schedule": "Integrated schedule board",
+      "guide_settlement": "Guide settlement automation",
+      "shopping": "Shopping commission distribution",
+      "hotel_vehicle": "Hotel calendar + vehicle costs",
+      "receivable_finance": "Receivables + card/bank",
+      "revenue": "Revenue & profit dashboard"
+    },
+    "pricing": {
+      "starter": "Starter — ₩199,000/mo",
+      "pro": "Pro — ₩249,000/mo",
+      "pro_ai": "Pro AI — ₩449,000/mo",
+      "business_ai": "Business AI — ₩799,000/mo"
+    }
+  },
+  "legal": {
+    "terms": "Terms of Service",
+    "privacy": "Privacy Policy",
+    "payment_refund": "Payment & Refund Policy",
+    "ai_notice": "AI Use Notice",
+    "business_hours": "Business Hours",
+    "company_name": "Company Name",
+    "representative": "Representative",
+    "business_number": "Business Registration No.",
+    "address": "Address"
+  }
+}

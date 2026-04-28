@@ -1,0 +1,40 @@
+{
+  "name": "bttour-saas",
+  "version": "0.1.0",
+  "private": true,
+  "description": "BT TOUR ERP — 인바운드 여행사 전용 통합 정산 SaaS",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "concurrently -n web,api -c blue,green \"npm run dev:web\" \"npm run dev:api\"",
+    "dev:web": "npm -w apps/web run dev",
+    "dev:api": "npm -w apps/api run start:dev",
+    "build": "npm run build:web && npm run build:api",
+    "build:web": "npm -w apps/web run build",
+    "build:api": "npm -w apps/api run build",
+    "lint": "npm run lint:web && npm run lint:api",
+    "lint:web": "npm -w apps/web run lint",
+    "lint:api": "npm -w apps/api run lint",
+    "typecheck": "npm -w apps/web run typecheck && npm -w apps/api run typecheck",
+    "db:generate": "npm -w @bttour/db run generate",
+    "db:migrate": "npm -w @bttour/db run migrate",
+    "db:seed": "npm -w @bttour/db run seed",
+    "db:seed:demo": "npm -w @bttour/db run seed:demo",
+    "db:studio": "npm -w @bttour/db run studio"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.0",
+    "eslint": "^8.57.1",
+    "prettier": "^3.3.3",
+    "typescript": "^5.6.3"
+  },
+  "engines": {
+    "node": ">=20.10.0",
+    "npm": ">=10.0.0"
+  },
+  "dependencies": {
+    "@prisma/client": "^5.22.0"
+  }
+}

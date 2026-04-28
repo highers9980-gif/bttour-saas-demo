@@ -1,0 +1,336 @@
+{
+  "common": {
+    "save": "保存",
+    "cancel": "取消",
+    "approve": "批准",
+    "reject": "拒绝",
+    "edit": "编辑",
+    "delete": "删除",
+    "add": "添加",
+    "search": "搜索",
+    "all": "全部",
+    "list": "列表",
+    "refresh": "刷新",
+    "export": "导出",
+    "export_excel": "导出 Excel",
+    "copy": "复制",
+    "send": "发送",
+    "recharge": "充值",
+    "next": "下一步",
+    "back": "返回",
+    "view_all": "查看全部",
+    "view_all_arrow": "查看全部 →",
+    "workspace": "工作区",
+    "logout": "退出登录",
+    "login": "登录",
+    "signup": "注册",
+    "loading": "加载中...",
+    "empty": "无数据",
+    "retry": "重试"
+  },
+  "status": {
+    "in_progress": "进行中",
+    "scheduled": "计划",
+    "done": "完成",
+    "pending": "待处理",
+    "partial": "部分",
+    "unassigned": "未分配",
+    "unpaid": "未支付",
+    "paid": "已支付",
+    "active": "启用",
+    "suspicious": "可疑"
+  },
+  "unit": {
+    "item": "件",
+    "person": "人",
+    "team": "团",
+    "krw": "KRW"
+  },
+  "nav": {
+    "group_operations": "运营",
+    "group_settlement": "结算",
+    "group_accounting": "会计",
+    "group_statistics": "统计",
+    "group_admin": "管理员",
+    "dashboard": "仪表板",
+    "schedule": "行程",
+    "team_timeline": "团队时间线",
+    "hotel_calendar": "酒店日历",
+    "guide_settlement": "导游结算",
+    "vehicle": "车辆费",
+    "shopping_fee": "购物佣金",
+    "receivables": "应收款",
+    "finance": "银行·卡",
+    "expense": "费用处理",
+    "revenue": "营收",
+    "statistics": "综合统计",
+    "guide_recommend": "导游推荐",
+    "user_management": "用户管理",
+    "settings": "工作区设置",
+    "billing": "付款·套餐"
+  },
+  "auth": {
+    "login": {
+      "title": "登录",
+      "welcome_back": "欢迎回到 BT TOUR ERP。",
+      "email_or_id": "邮箱或账号",
+      "password": "密码",
+      "workspace": "工作区",
+      "workspace_hint": "公司所属工作区名称",
+      "remember": "记住登录信息 (30天)",
+      "forgot_password": "找回密码",
+      "with_kakao": "使用 Kakao 登录",
+      "with_google": "使用 Google 登录",
+      "no_account": "还没有账号吗?",
+      "free_signup": "免费注册",
+      "dev_mode": "开发模式 — 测试账户",
+      "dev_mode_remove": "生产环境会移除此框。",
+      "invalid_credentials": "账号或密码不正确。",
+      "workspace_required": "请输入工作区"
+    },
+    "brand": {
+      "badge": "专为韩·中·越入境旅行社",
+      "headline_1": "今天也",
+      "headline_highlight": "结算负责人",
+      "headline_2": "停止加班",
+      "description": "导游结算、购物佣金、应收、酒店、车辆费一屏掌控。"
+    },
+    "signup": {
+      "have_account": "已有账号吗?",
+      "step_company": "选择公司",
+      "step_account": "账户信息",
+      "step_done": "完成",
+      "company_title": "请选择公司",
+      "company_desc": "可注册新公司或加入现有工作区。",
+      "new_company": "注册新公司",
+      "new_company_desc": "公司首次注册。您将自动成为 Owner。",
+      "join_company": "加入现有公司",
+      "join_company_desc": "公司已在使用。需管理员批准。",
+      "company_name": "公司名",
+      "workspace_id": "工作区 ID",
+      "workspace_id_hint": "登录时使用。仅小写英文和连字符。",
+      "starting_plan": "初始套餐",
+      "account_title": "输入账户信息",
+      "account_desc": "输入登录所需信息。",
+      "name": "姓名",
+      "phone": "电话",
+      "email": "邮箱",
+      "password_confirm": "确认密码",
+      "password_hint": "建议 8 位以上，包含字母、数字、符号",
+      "agree_all": "同意全部",
+      "terms": "我同意服务条款",
+      "privacy": "我同意个人信息收集与使用",
+      "ai_transfer": "我同意 AI 处理和跨境传输",
+      "marketing": "我同意接收营销信息",
+      "submit": "提交申请",
+      "success_title": "注册完成!",
+      "pending_title": "等待管理员批准"
+    }
+  },
+  "dashboard": {
+    "title": "仪表板",
+    "kpi": {
+      "month_revenue": "本月收入",
+      "month_profit": "本月利润",
+      "active_teams": "进行中团队",
+      "receivables_balance": "应收余额",
+      "over_30_days": "超过30天"
+    },
+    "weekly_teams": "本周团队",
+    "assign_guide": "分配导游",
+    "ai": {
+      "title": "Hermes AI 自动化",
+      "subtitle": "监督 → 并行执行 → 验证",
+      "running": "运行中",
+      "completed_today": "今日已处理",
+      "queue": "队列",
+      "avg_time": "平均处理时间"
+    },
+    "queue": {
+      "title": "KakaoTalk 队列",
+      "settlement_notice": "结算通知",
+      "receivable_reminder": "应收催款",
+      "hotel_confirmed": "酒店预订确认"
+    },
+    "quick": {
+      "title": "快捷操作",
+      "new_team": "新增团队",
+      "upload_receipt": "上传收据",
+      "start_month_end": "开始月末结算",
+      "monthly_report": "生成月报"
+    },
+    "fx": {
+      "title": "实时汇率"
+    },
+    "empty": {
+      "title": "暂无运营数据",
+      "cta": "创建第一个团队"
+    }
+  },
+  "schedule": {
+    "title": "行程",
+    "subtitle": "月度团队运营",
+    "view": {
+      "list": "列表",
+      "calendar": "日历",
+      "gantt": "甘特"
+    },
+    "new_team": "新增团队",
+    "search_placeholder": "搜索团队/代理",
+    "filter": {
+      "guide_all": "导游: 全部",
+      "hotel_all": "酒店: 全部",
+      "status_all": "状态: 全部",
+      "origin_all": "出发地: 全部"
+    },
+    "timeline": {
+      "title": "团队时间线"
+    },
+    "hotel_calendar": {
+      "title": "酒店日历",
+      "add_reservation": "添加预订",
+      "include_next_month": "包含下月7天"
+    }
+  },
+  "settlement": {
+    "guide": {
+      "title": "导游结算",
+      "bulk_kakao": "批量发送 Kakao",
+      "download_pdf": "下载结算单 PDF",
+      "review_statement": "查看结算单 →",
+      "unpaid": "未支付",
+      "paid": "已支付"
+    },
+    "vehicle": {
+      "title": "车辆费",
+      "title_full": "车辆费结算",
+      "add_trip": "登记行车",
+      "distribution": "按车型行车分布",
+      "driver_summary": "按司机行车与结算"
+    },
+    "shopping": {
+      "title": "购物佣金",
+      "add_sale": "添加销售",
+      "guide_incentive": "按导游购物激励",
+      "center_settlement": "各中心佣金结算",
+      "recent_sales": "最近购物销售"
+    },
+    "receivable": {
+      "title": "应收款管理",
+      "by_partner": "按客户应收款",
+      "add": "添加应收",
+      "bulk_reminder": "批量催收",
+      "review_message": "查看消息 →"
+    }
+  },
+  "finance": {
+    "title": "银行·卡",
+    "add_transaction": "添加交易",
+    "import_statement": "导入对账单",
+    "cards": "卡",
+    "bank_accounts": "银行账户",
+    "fx": "外币·兑换",
+    "usd_holding": "USD 持有",
+    "vnd_holding": "VND 持有",
+    "exchange_history": "兑换记录"
+  },
+  "expense": {
+    "title": "费用处理",
+    "ocr_processing": "Hermes AI OCR 处理中",
+    "pending_approval": "待批准",
+    "bulk_approve": "批量批准",
+    "upload_receipt": "上传收据",
+    "manual_input": "手动输入",
+    "recent": "最近费用"
+  },
+  "analytics": {
+    "revenue": {
+      "title": "营收·利润仪表板",
+      "monthly_chart": "月度收入 / 利润",
+      "year_compare": "年度收入·利润比较",
+      "guide_top5": "导游业绩"
+    },
+    "statistics": {
+      "title": "综合统计",
+      "guide_performance": "导游综合业绩",
+      "agent_revenue": "按代理收入贡献",
+      "hotel_occupancy": "酒店入住与收入",
+      "origin_distribution": "出发地分布"
+    },
+    "guide_recommend": {
+      "title": "导游推荐",
+      "unassigned_teams": "未分配团队",
+      "assigned_done": "已分配",
+      "conflict_detected": "检测到导游重复分配"
+    }
+  },
+  "admin": {
+    "users": {
+      "title": "用户管理",
+      "subtitle": "工作区成员 · 申请 · 邀请",
+      "invite_member": "邀请成员",
+      "active_users": "活跃用户",
+      "pending": "待批准",
+      "invitations": "邀请",
+      "user": "用户",
+      "email": "邮箱",
+      "role": "权限",
+      "last_login": "最近登录",
+      "status": "状态",
+      "manage": "管理",
+      "change_role": "更改权限",
+      "adjust_role": "调整权限",
+      "new_invite": "邀请新成员",
+      "invite_desc": "通过 KakaoTalk/邮箱发送邀请链接。对方设置密码后立即启用。",
+      "resend": "重新发送",
+      "cancel_invite": "取消邀请",
+      "permission_matrix": "权限矩阵",
+      "billing_permission": "付款·订阅·取消",
+      "member_permission": "批准用户·更改角色",
+      "settlement_permission": "创建/编辑/删除结算",
+      "master_permission": "导游/客户主数据",
+      "export_permission": "数据导出",
+      "suspicious_reason_external_admin": "外部邮箱 + ADMIN 权限请求 + 简介为空"
+    }
+  },
+  "marketing": {
+    "hero": {
+      "title": "用系统替代一名结算负责人",
+      "subtitle": "专为入境旅行社的综合结算 SaaS",
+      "demo": "查看演示",
+      "signup": "免费注册"
+    },
+    "section": {
+      "problems": "每月结算是否如此?",
+      "solution": "一屏、24小时、自动化",
+      "features": "竞争对手难以追上的两大武器",
+      "pricing": "仅为结算人员人工费的 11%",
+      "faq": "常见问题"
+    },
+    "feature": {
+      "schedule": "综合行程看板",
+      "guide_settlement": "导游结算自动化",
+      "shopping": "购物佣金分配",
+      "hotel_vehicle": "酒店日历 + 车辆费",
+      "receivable_finance": "应收 + 银行/卡",
+      "revenue": "营收·利润仪表板"
+    },
+    "pricing": {
+      "starter": "Starter — ₩199,000/月",
+      "pro": "Pro — ₩249,000/月",
+      "pro_ai": "Pro AI — ₩449,000/月",
+      "business_ai": "Business AI — ₩799,000/月"
+    }
+  },
+  "legal": {
+    "terms": "服务条款",
+    "privacy": "隐私政策",
+    "payment_refund": "支付与退款",
+    "ai_notice": "AI 使用声明",
+    "business_hours": "营业时间",
+    "company_name": "公司名",
+    "representative": "代表",
+    "business_number": "营业执照号",
+    "address": "地址"
+  }
+}

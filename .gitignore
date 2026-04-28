@@ -1,0 +1,19 @@
+node_modules
+.next
+dist
+build
+.turbo
+.cache
+*.log
+.env
+.env.local
+.env.*.local
+!.env.example
+.DS_Store
+coverage
+.vercel
+*.tsbuildinfo
+.eslintcache
+prisma/migrations/dev.db*
+# Prisma generated client (재생성 가능)
+packages/db/src/generated

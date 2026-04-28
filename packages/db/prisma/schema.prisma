@@ -1,0 +1,1091 @@
+// BT TOUR SaaS — 스키마 1차안 (Phase 0)
+//
+// 이 파일은 멀티테넌시 + 인증 + 결제 + AI 크레딧의 골격만 담는다.
+// 도메인 모델(Team, Schedule, Guide, Hotel 등)은 Codex의 docs/DOMAIN_MAPPING.md 분석 결과를
+// 받은 뒤 Phase 2에서 추가한다. 추가 시 모든 테이블에는 `workspaceId` 필수.
+
+generator client {
+  provider = "prisma-client-js"
+  // 모노레포 hoisting 회피 — 명시 경로로 client를 packages/db 내부에 생성.
+  // packages/db/src/index.ts가 이 경로에서 PrismaClient를 import.
+  output   = "../src/generated/client"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// 인증 & 사용자
+// NextAuth v5 (Auth.js) Prisma adapter 표준 모델을 따른다.
+// ─────────────────────────────────────────────────────────────────────────
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  emailVerified DateTime?
+  name          String?
+  image         String?
+  locale        Locale    @default(KO)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  accounts    Account[]
+  sessions    Session[]
+  memberships Membership[]
+  invitesSent Invitation[] @relation("InvitedBy")
+
+  @@map("users")
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+  @@map("verification_tokens")
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// 멀티테넌시: Workspace + Membership + Invitation
+// ─────────────────────────────────────────────────────────────────────────
+
+model Workspace {
+  id        String   @id @default(cuid())
+  slug      String   @unique // URL 식별자: /w/[slug]
+  name      String
+  logoUrl   String?
+  // 사업자 정보 (도면 footer 영역)
+  bizName   String?
+  bizNumber String?
+  bizCeo    String?
+  bizPhone  String?
+  bizEmail  String?
+  bizAddr   String?
+
+  // 워크스페이스 기본 로케일 (개별 사용자 로케일과 별개)
+  defaultLocale Locale @default(KO)
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  memberships  Membership[]
+  invitations  Invitation[]
+  subscription Subscription?
+  aiCredits    AiCreditLedger[]
+  auditLogs    AuditLog[]
+
+  // Phase 2 도메인 (마스터/운영/정산/회계/분석)
+  partners               Partner[]
+  guides                 Guide[]
+  hotels                 Hotel[]
+  vehicles               Vehicle[]
+  drivers                Driver[]
+  shoppingCenters        ShoppingCenter[]
+  tourTeams              TourTeam[]
+  teamGuideAssignments   TeamGuideAssignment[]
+  teamHotelStays         TeamHotelStay[]
+  teamVehicleAssignments TeamVehicleAssignment[]
+  guideSettlements       GuideSettlement[]
+  guideSettlementPayments GuideSettlementPayment[]
+  vehicleSettlements     VehicleSettlement[]
+  vehicleSettlementPayments VehicleSettlementPayment[]
+  shoppingSales          ShoppingSale[]
+  shoppingCommissions    ShoppingCommission[]
+  financeWallets         FinanceWallet[]
+  financeLedgerLines     FinanceLedgerLine[]
+  receivables            Receivable[]
+  receivablePayments     ReceivablePayment[]
+  expenses               Expense[]
+  expenseAttachments     ExpenseAttachment[]
+  exchangeRates          ExchangeRate[]
+
+  @@index([deletedAt])
+  @@map("workspaces")
+}
+
+enum Role {
+  OWNER
+  ADMIN
+  MANAGER
+  VIEWER
+}
+
+enum MembershipStatus {
+  PENDING // 가입 신청 후 관리자 승인 대기
+  ACTIVE
+  SUSPENDED
+}
+
+model Membership {
+  id          String           @id @default(cuid())
+  workspaceId String
+  userId      String
+  role        Role             @default(VIEWER)
+  status      MembershipStatus @default(PENDING)
+  invitedById String?
+  joinedAt    DateTime?
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([workspaceId, userId])
+  @@index([userId])
+  @@index([workspaceId, status])
+  @@map("memberships")
+}
+
+model Invitation {
+  id          String   @id @default(cuid())
+  workspaceId String
+  email       String
+  role        Role     @default(VIEWER)
+  token       String   @unique
+  invitedById String
+  expiresAt   DateTime
+  acceptedAt  DateTime?
+  createdAt   DateTime @default(now())
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  invitedBy User      @relation("InvitedBy", fields: [invitedById], references: [id])
+
+  @@index([workspaceId, email])
+  @@map("invitations")
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// 결제 & 플랜
+// 도면 index.html PRICING 섹션 기준: Starter / Pro / Pro AI / Business AI
+// ─────────────────────────────────────────────────────────────────────────
+
+enum PlanCode {
+  STARTER
+  PRO
+  PRO_AI
+  BUSINESS_AI
+}
+
+enum SubscriptionStatus {
+  TRIALING
+  ACTIVE
+  PAST_DUE
+  CANCELED
+  EXPIRED
+}
+
+model Plan {
+  code            PlanCode @id
+  name            String // 표기용 명칭 (한국어)
+  monthlyPriceKrw Int
+  // 사용량 한도 (도면 PRICING 카드 기준)
+  maxUsers        Int
+  maxTeamsPerMonth Int? // null = 무제한
+  alimtalkQuota   Int? // null = 무제한
+  aiEnabled       Boolean  @default(false)
+  aiCreditIncluded Int     @default(0)
+  // 셋업 비용 (1회성)
+  setupFeeKrw     Int      @default(0)
+  // 부가 메타
+  description     String?
+  highlight       Boolean  @default(false) // 도면 "가장 인기" 배지 표시 여부
+  sortOrder       Int      @default(0)
+
+  subscriptions Subscription[]
+
+  @@map("plans")
+}
+
+model Subscription {
+  id          String             @id @default(cuid())
+  workspaceId String             @unique
+  planCode    PlanCode
+  status      SubscriptionStatus @default(TRIALING)
+  // 청구 주기
+  currentPeriodStart DateTime
+  currentPeriodEnd   DateTime
+  cancelAtPeriodEnd  Boolean   @default(false)
+  canceledAt         DateTime?
+  trialEndsAt        DateTime?
+  // 토스페이먼츠 빌링키 등 외부 식별자 (Phase 3에서 활성화)
+  externalCustomerId String?
+  externalBillingKey String?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  plan      Plan      @relation(fields: [planCode], references: [code])
+
+  @@index([status, currentPeriodEnd])
+  @@map("subscriptions")
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// AI 크레딧 — 도면의 "AI 크레딧 50,000 포함, 초과 5,000원/10,000 크레딧" 모델
+// 입출입을 한 줄씩 기록하고 잔액은 계산으로 도출 (감사 가능성 우선).
+// ─────────────────────────────────────────────────────────────────────────
+
+enum AiCreditEntryType {
+  GRANT // 플랜 포함 또는 충전
+  DEBIT // 사용 차감
+  REFUND // 환불 또는 보정
+  EXPIRE // 만료
+}
+
+enum AiAgentKind {
+  RECEIPT_OCR
+  SETTLEMENT_REPORT
+  RECEIVABLE_MESSAGE
+  MONTHLY_INSIGHT
+  SCHEDULE_CHANGE_DETECT
+}
+
+model AiCreditLedger {
+  id          String            @id @default(cuid())
+  workspaceId String
+  type        AiCreditEntryType
+  amount      Int // GRANT/REFUND는 양수, DEBIT/EXPIRE는 음수
+  balanceAfter Int
+  reason      String?
+  agent       AiAgentKind?
+  // 사용 차감의 경우 어떤 작업이었는지 추적
+  refType     String? // 예: "GuideSettlement", "Receivable" 등
+  refId       String?
+  createdAt   DateTime          @default(now())
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@index([workspaceId, createdAt])
+  @@map("ai_credit_ledger")
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// 감사 로그 — 멀티테넌시 SaaS 필수 (RBAC 변경, 권한 승인 등 추적)
+// ─────────────────────────────────────────────────────────────────────────
+
+model AuditLog {
+  id          String   @id @default(cuid())
+  workspaceId String?
+  actorUserId String?
+  action      String // 예: "membership.invite", "subscription.upgrade"
+  targetType  String?
+  targetId    String?
+  metadata    Json?
+  ipAddress   String?
+  userAgent   String?
+  createdAt   DateTime @default(now())
+
+  workspace Workspace? @relation(fields: [workspaceId], references: [id], onDelete: SetNull)
+
+  @@index([workspaceId, createdAt])
+  @@index([actorUserId, createdAt])
+  @@map("audit_logs")
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// 다국어 — 도면 i18n KO/EN/ZH
+// ─────────────────────────────────────────────────────────────────────────
+
+enum Locale {
+  KO
+  EN
+  ZH
+}
+
+// ═════════════════════════════════════════════════════════════════════════
+// Phase 2 도메인 — Codex 03 도메인 매핑 + POLICY_DECISIONS 11개 반영
+//
+// 정책:
+//  - 모든 테이블에 workspaceId 필수 (멀티테넌시 격리)
+//  - 마스터(Guide/Hotel/Vehicle/...) 선택적 + snapshot 문자열 동시 보유 (정책 8-C)
+//  - 5천원 반올림은 표시 전용 (정책 2-A) — DB는 원 단위 정수
+//  - 가이드/차량 과지급 금지 (정책 3-A) — 코드 레벨 validateSettlementPayment 사용
+//  - 미수금 다중통화 (정책 4-A) — currencyCode + amountMinor
+//  - FinanceWallet override 컬럼 제거 (정책 6-A) — BALANCE_ADJUSTMENT ledger로 대체
+//  - TourTeam.teamNo unique = workspace + year + month (정책 7-A)
+//  - 외부 sync 모델 없음 (정책 5-A) — 직접 입력형만
+// ═════════════════════════════════════════════════════════════════════════
+
+// ─────────────────────────────────────────────────────────────────────────
+// 마스터 (Master Data)
+// ─────────────────────────────────────────────────────────────────────────
+
+enum PartnerKind {
+  AGENCY          // 인바운드 에이전트
+  HOTEL_VENDOR
+  VEHICLE_VENDOR
+  SHOPPING_CENTER // (별도 ShoppingCenter 테이블도 있음 — 거래처 일반 view용)
+  CUSTOMER
+  OTHER
+}
+
+model Partner {
+  id          String   @id @default(cuid())
+  workspaceId String
+  name        String
+  kind        PartnerKind @default(AGENCY)
+  contactName String?
+  contactPhone String?
+  contactEmail String?
+  region      String?
+  memo        String?
+  active      Boolean  @default(true)
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  deletedAt   DateTime?
+
+  workspace            Workspace            @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  tourTeams            TourTeam[]
+  guideSettlements     GuideSettlement[]
+  vehicleSettlements   VehicleSettlement[]
+  receivables          Receivable[]
+
+  @@index([workspaceId, active, kind])
+  @@map("partners")
+}
+
+model Guide {
+  id          String   @id @default(cuid())
+  workspaceId String
+  name        String
+  region      String?  // 가이드 활동 지역
+  phone       String?
+  email       String?
+  language    String?  // 한국어/중국어/베트남어 등
+  colorKey    String?  // 일정현황/타임라인 가이드 색상 안정 hash
+  memo        String?
+  active      Boolean  @default(true)
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  deletedAt   DateTime?
+
+  workspace          Workspace            @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  guideAssignments   TeamGuideAssignment[]
+  guideSettlements   GuideSettlement[]
+  shoppingSales      ShoppingSale[]
+
+  @@index([workspaceId, active])
+  @@map("guides")
+}
+
+model Hotel {
+  id          String   @id @default(cuid())
+  workspaceId String
+  name        String
+  address     String?
+  phone       String?
+  rank        Int?     // 1~5
+  region      String?
+  contactName String?
+  memo        String?
+  active      Boolean  @default(true)
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  deletedAt   DateTime?
+
+  workspace  Workspace        @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  hotelStays TeamHotelStay[]
+
+  @@index([workspaceId, active])
+  @@map("hotels")
+}
+
+model Vehicle {
+  id          String   @id @default(cuid())
+  workspaceId String
+  label       String   // 차량 식별 라벨 (예: "서울 25인승 #1")
+  vehicleType String?  // 25인승/45인승/세단 등
+  plateNumber String?
+  region      String?  // 부산/서울/제주
+  vendor      String?
+  memo        String?
+  active      Boolean  @default(true)
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  deletedAt   DateTime?
+
+  workspace          Workspace               @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  drivers            Driver[]
+  vehicleAssignments TeamVehicleAssignment[]
+  vehicleSettlements VehicleSettlement[]
+
+  @@index([workspaceId, active])
+  @@map("vehicles")
+}
+
+model Driver {
+  id          String   @id @default(cuid())
+  workspaceId String
+  vehicleId   String?
+  name        String
+  phone       String?
+  memo        String?
+  active      Boolean  @default(true)
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  deletedAt   DateTime?
+
+  workspace          Workspace               @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  vehicle            Vehicle?                @relation(fields: [vehicleId], references: [id], onDelete: SetNull)
+  vehicleAssignments TeamVehicleAssignment[]
+
+  @@index([workspaceId, active])
+  @@map("drivers")
+}
+
+model ShoppingCenter {
+  id          String   @id @default(cuid())
+  workspaceId String
+  name        String
+  category    String?  // 인삼/적송/화장품/영지 등
+  region      String?
+  sortOrder   Int      @default(0)
+  // 기본 수수료율 (%) — 매출 등록 시 폼에 미리 채워짐. null이면 사용자가 매번 수동 입력.
+  // 정책 결정(2026-04-29): 품목/매출별 다른 수수료율 허용을 위해 항상 폼에서 override 가능.
+  defaultCommissionRatePercent Float?
+  memo        String?
+  active      Boolean  @default(true)
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  deletedAt   DateTime?
+
+  workspace   Workspace            @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  sales       ShoppingSale[]
+  commissions ShoppingCommission[]
+
+  @@index([workspaceId, active])
+  @@map("shopping_centers")
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// 운영 (Operations)
+// ─────────────────────────────────────────────────────────────────────────
+
+enum TourTeamStatus {
+  SCHEDULED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+enum AssignmentStatus {
+  TENTATIVE
+  CONFIRMED
+  CANCELLED
+}
+
+model TourTeam {
+  id          String   @id @default(cuid())
+  workspaceId String
+
+  // 팀 식별 (정책 7-A: workspace + year + month + teamNo unique)
+  year        Int
+  month       Int
+  teamNo      Int
+
+  // 거래처 — 마스터 + snapshot 동시 (정책 8-C)
+  partnerId           String?
+  partnerNameSnapshot String?
+  agentLabel          String?
+
+  // 일정
+  startDate   DateTime
+  endDate     DateTime
+  groupName   String?
+
+  // 인원
+  paxAdult    Int      @default(0)
+  paxChild    Int      @default(0)
+  paxInfant   Int      @default(0)
+  paxTc       Int      @default(0)
+
+  // 객실
+  roomCount       Int      @default(0)
+  roomComposition String?
+
+  // 출발지/항공
+  originCode  String?
+  originLabel String?
+  flightIn    String?
+  flightOut   String?
+
+  tourType    String?
+  starRating  Int?
+  status      TourTeamStatus @default(SCHEDULED)
+  memo        String?
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  createdById String?
+  updatedById String?
+  deletedAt   DateTime?
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  partner   Partner?  @relation(fields: [partnerId], references: [id], onDelete: SetNull)
+
+  guideAssignments   TeamGuideAssignment[]
+  hotelStays         TeamHotelStay[]
+  vehicleAssignments TeamVehicleAssignment[]
+  guideSettlements   GuideSettlement[]
+  vehicleSettlements VehicleSettlement[]
+  shoppingSales      ShoppingSale[]
+  receivables        Receivable[]
+  expenses           Expense[]
+
+  @@unique([workspaceId, year, month, teamNo])
+  @@index([workspaceId, status, startDate])
+  @@index([workspaceId, deletedAt])
+  @@map("tour_teams")
+}
+
+model TeamGuideAssignment {
+  id          String   @id @default(cuid())
+  workspaceId String
+  teamId      String
+
+  guideId           String?
+  guideNameSnapshot String   // 마스터 미연결시도 항상 저장
+
+  role        String   @default("LEAD") // LEAD/SUB/INTERPRETER
+  status      AssignmentStatus @default(TENTATIVE)
+
+  startDate   DateTime?
+  endDate     DateTime?
+  memo        String?
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  team      TourTeam  @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  guide     Guide?    @relation(fields: [guideId], references: [id], onDelete: SetNull)
+
+  @@index([workspaceId, teamId])
+  @@index([workspaceId, guideId, startDate])
+  @@map("team_guide_assignments")
+}
+
+enum HotelStaySource {
+  MANUAL          // 호텔 캘린더에서 수동 입력
+  SCHEDULE_AUTO   // 일정현황 팀 호텔 배정으로 자동 표시
+}
+
+model TeamHotelStay {
+  id          String   @id @default(cuid())
+  workspaceId String
+  teamId      String
+
+  hotelId           String?
+  hotelNameSnapshot String
+
+  checkIn       DateTime
+  checkOut      DateTime
+  roomCount     Int      @default(0)
+  reservationNo String?
+
+  source      HotelStaySource  @default(MANUAL)
+  status      AssignmentStatus @default(TENTATIVE)
+  memo        String?
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  team      TourTeam  @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  hotel     Hotel?    @relation(fields: [hotelId], references: [id], onDelete: SetNull)
+
+  @@index([workspaceId, hotelId, checkIn])
+  @@index([workspaceId, teamId])
+  @@map("team_hotel_stays")
+}
+
+model TeamVehicleAssignment {
+  id          String   @id @default(cuid())
+  workspaceId String
+  teamId      String
+
+  vehicleId             String?
+  driverId              String?
+  vehicleLabelSnapshot  String
+
+  startDate   DateTime
+  endDate     DateTime
+
+  // 차량비 (정책 1-A: VAT round) — 표시값은 packages/shared의 computeVat10/Included로 계산
+  totalWon         Int @default(0)
+  vatWon           Int @default(0)
+  totalWithVatWon  Int @default(0)
+
+  status      AssignmentStatus @default(TENTATIVE)
+  memo        String?
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  workspace         Workspace          @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  team              TourTeam           @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  vehicle           Vehicle?           @relation(fields: [vehicleId], references: [id], onDelete: SetNull)
+  driver            Driver?            @relation(fields: [driverId], references: [id], onDelete: SetNull)
+  vehicleSettlement VehicleSettlement?
+
+  @@index([workspaceId, vehicleId, startDate])
+  @@index([workspaceId, teamId])
+  @@map("team_vehicle_assignments")
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// 정산 (Settlement)
+// ─────────────────────────────────────────────────────────────────────────
+
+enum SettlementStatus {
+  DRAFT
+  CONFIRMED
+  PARTIALLY_PAID
+  PAID
+  CANCELLED
+}
+
+model GuideSettlement {
+  id          String   @id @default(cuid())
+  workspaceId String
+
+  teamId            String?
+  guideId           String?
+  guideNameSnapshot String
+
+  periodYear  Int
+  periodMonth Int
+
+  // 정책 2-A: DB는 원 단위 원값. 5천원 반올림은 표시 전용.
+  totalWon    Int
+
+  partnerId           String?
+  partnerNameSnapshot String?
+
+  status        SettlementStatus @default(DRAFT)
+  confirmedAt   DateTime?
+  confirmedById String?
+  memo          String?
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  createdById String?
+  updatedById String?
+  deletedAt   DateTime?
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  team      TourTeam? @relation(fields: [teamId], references: [id], onDelete: SetNull)
+  guide     Guide?    @relation(fields: [guideId], references: [id], onDelete: SetNull)
+  partner   Partner?  @relation(fields: [partnerId], references: [id], onDelete: SetNull)
+  payments  GuideSettlementPayment[]
+
+  @@index([workspaceId, periodYear, periodMonth])
+  @@index([workspaceId, guideId])
+  @@index([workspaceId, status])
+  @@map("guide_settlements")
+}
+
+model GuideSettlementPayment {
+  id           String   @id @default(cuid())
+  workspaceId  String
+  settlementId String
+
+  // 정책 3-A: 과지급 금지. 코드 레벨 validateSettlementPayment에서 검증.
+  amountWon Int
+  paidAt    DateTime
+  note      String?
+
+  createdAt DateTime @default(now())
+
+  workspace  Workspace       @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  settlement GuideSettlement @relation(fields: [settlementId], references: [id], onDelete: Cascade)
+
+  @@index([workspaceId, settlementId])
+  @@map("guide_settlement_payments")
+}
+
+model VehicleSettlement {
+  id                  String   @id @default(cuid())
+  workspaceId         String
+  teamId              String?
+  vehicleAssignmentId String?  @unique
+
+  vehicleId            String?
+  vehicleLabelSnapshot String
+
+  periodYear  Int
+  periodMonth Int
+
+  // 정책 1-A: VAT round
+  supplyAmountWon Int
+  vatWon          Int @default(0)
+  totalWithVatWon Int
+
+  partnerId           String?
+  partnerNameSnapshot String?
+
+  status SettlementStatus @default(DRAFT)
+  memo   String?
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  workspace         Workspace              @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  team              TourTeam?              @relation(fields: [teamId], references: [id], onDelete: SetNull)
+  vehicle           Vehicle?               @relation(fields: [vehicleId], references: [id], onDelete: SetNull)
+  partner           Partner?               @relation(fields: [partnerId], references: [id], onDelete: SetNull)
+  vehicleAssignment TeamVehicleAssignment? @relation(fields: [vehicleAssignmentId], references: [id], onDelete: SetNull)
+  payments          VehicleSettlementPayment[]
+
+  @@index([workspaceId, periodYear, periodMonth])
+  @@index([workspaceId, vehicleId])
+  @@map("vehicle_settlements")
+}
+
+model VehicleSettlementPayment {
+  id           String   @id @default(cuid())
+  workspaceId  String
+  settlementId String
+
+  amountWon Int
+  paidAt    DateTime
+  note      String?
+
+  createdAt DateTime @default(now())
+
+  workspace  Workspace         @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  settlement VehicleSettlement @relation(fields: [settlementId], references: [id], onDelete: Cascade)
+
+  @@index([workspaceId, settlementId])
+  @@map("vehicle_settlement_payments")
+}
+
+model ShoppingSale {
+  id          String   @id @default(cuid())
+  workspaceId String
+  teamId      String?
+  guideId     String?
+  centerId    String
+
+  visitDate   DateTime
+  paxCount    Int      @default(0)
+  buyerCount  Int      @default(0)
+  salesWon    Int      @default(0)
+  category    String?  // 인삼/적송/화장품/영지 등
+  memo        String?
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  deletedAt   DateTime?
+
+  workspace   Workspace            @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  team        TourTeam?            @relation(fields: [teamId], references: [id], onDelete: SetNull)
+  guide       Guide?               @relation(fields: [guideId], references: [id], onDelete: SetNull)
+  center      ShoppingCenter       @relation(fields: [centerId], references: [id])
+  commissions ShoppingCommission[]
+
+  @@index([workspaceId, centerId, visitDate])
+  @@index([workspaceId, guideId, visitDate])
+  @@map("shopping_sales")
+}
+
+model ShoppingCommission {
+  id             String   @id @default(cuid())
+  workspaceId    String
+  shoppingSaleId String?
+  centerId       String
+
+  periodYear  Int
+  periodMonth Int
+
+  // 정책 1-A: VAT round 통일 (기존 ERP에서는 trunc였음)
+  commissionWon   Int
+  vatWon          Int @default(0)
+  totalWithVatWon Int
+  // 이 매출에 실제 적용된 수수료율(%). 통계·감사용. null이면 사용자가 commissionWon을 직접 입력한 경우.
+  commissionRatePercent Float?
+
+  status SettlementStatus @default(DRAFT)
+  paidAt DateTime?
+  memo   String?
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  workspace Workspace      @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  center    ShoppingCenter @relation(fields: [centerId], references: [id])
+  sale      ShoppingSale?  @relation(fields: [shoppingSaleId], references: [id], onDelete: SetNull)
+
+  @@index([workspaceId, centerId, periodYear, periodMonth])
+  @@map("shopping_commissions")
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// 회계 (Finance)
+// ─────────────────────────────────────────────────────────────────────────
+
+enum WalletKind {
+  BANK
+  CARD
+  FX // 외화 보유 지갑
+}
+
+enum LedgerEntryType {
+  DEPOSIT
+  WITHDRAWAL
+  CARD_USE
+  CARD_PAYMENT
+  FX_OUT             // KRW → 외화
+  FX_IN              // 외화 → KRW
+  BALANCE_ADJUSTMENT // 정책 6-A: override 컬럼 폐지 → 보정 라인으로
+  OTHER
+}
+
+model FinanceWallet {
+  id          String   @id @default(cuid())
+  workspaceId String
+
+  kind         WalletKind
+  name         String
+  institution  String?
+  numberMasked String?
+  currencyCode String     @default("KRW")
+  isMainKrw    Boolean    @default(false)
+
+  // 정책 6-A: currentBalanceMinor 제거. balance = openingBalanceMinor + Σ ledger.amountMinor
+  openingBalanceMinor Int @default(0)
+
+  // 카드 한정 (kind=CARD일 때만 의미)
+  billingDay     Int?
+  creditLimitWon Int?
+
+  active    Boolean  @default(true)
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  workspace   Workspace           @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  ledgerLines FinanceLedgerLine[]
+
+  @@index([workspaceId, kind, active])
+  @@map("finance_wallets")
+}
+
+model FinanceLedgerLine {
+  id          String   @id @default(cuid())
+  workspaceId String
+  walletId    String
+
+  entryType    LedgerEntryType
+  lineDatetime DateTime
+  amountMinor  Int            // 부호 있는 정수 (입금/+, 출금/-)
+  note         String?
+
+  // 환전 출금/입금 페어링 (FX_OUT + FX_IN을 같은 그룹으로 묶음)
+  transferGroupId String?
+
+  createdAt   DateTime @default(now())
+  createdById String?
+
+  workspace Workspace     @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  wallet    FinanceWallet @relation(fields: [walletId], references: [id], onDelete: Cascade)
+
+  @@index([workspaceId, walletId, lineDatetime])
+  @@index([workspaceId, transferGroupId])
+  @@map("finance_ledger_lines")
+}
+
+enum ReceivableStatus {
+  OPEN
+  PARTIALLY_PAID
+  PAID
+  WRITTEN_OFF
+}
+
+model Receivable {
+  id          String   @id @default(cuid())
+  workspaceId String
+  teamId      String?
+
+  partnerId           String?
+  partnerNameSnapshot String
+
+  title String
+
+  // 정책 4-A: 단일 Receivable 다중통화. KRW와 USD가 같이 있으면 행 2개.
+  currencyCode String @default("KRW")
+  amountMinor  Int
+
+  periodYear  Int
+  periodMonth Int
+  dueDate     DateTime?
+  dueNote     String?
+
+  status ReceivableStatus @default(OPEN)
+  memo   String?
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  team      TourTeam? @relation(fields: [teamId], references: [id], onDelete: SetNull)
+  partner   Partner?  @relation(fields: [partnerId], references: [id], onDelete: SetNull)
+  payments  ReceivablePayment[]
+
+  @@index([workspaceId, status, dueDate])
+  @@index([workspaceId, partnerId])
+  @@index([workspaceId, periodYear, periodMonth])
+  @@map("receivables")
+}
+
+model ReceivablePayment {
+  id           String   @id @default(cuid())
+  workspaceId  String
+  receivableId String
+
+  // Receivable과 같은 통화 권장 (다른 통화 입금 시 환전 후 입금으로 표현)
+  currencyCode String
+  amountMinor  Int
+  paidAt       DateTime
+  note         String?
+
+  createdAt DateTime @default(now())
+
+  workspace  Workspace  @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  receivable Receivable @relation(fields: [receivableId], references: [id], onDelete: Cascade)
+
+  @@index([workspaceId, receivableId])
+  @@map("receivable_payments")
+}
+
+enum ExpenseStatus {
+  DRAFT
+  PENDING_APPROVAL
+  APPROVED
+  REJECTED
+  PAID
+}
+
+model Expense {
+  id          String   @id @default(cuid())
+  workspaceId String
+  teamId      String?
+
+  title       String
+  category    String?
+  expenseDate DateTime
+
+  currencyCode String @default("KRW")
+  amountMinor  Int
+  vatMinor     Int    @default(0)
+
+  vendorName String?
+
+  status       ExpenseStatus @default(DRAFT)
+  approvedAt   DateTime?
+  approvedById String?
+  memo         String?
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  createdById String?
+  deletedAt   DateTime?
+
+  workspace   Workspace           @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  team        TourTeam?           @relation(fields: [teamId], references: [id], onDelete: SetNull)
+  attachments ExpenseAttachment[]
+
+  @@index([workspaceId, status, expenseDate])
+  @@map("expenses")
+}
+
+model ExpenseAttachment {
+  id          String   @id @default(cuid())
+  workspaceId String
+  expenseId   String
+
+  fileName String
+  fileUrl  String
+  fileSize Int?
+  mimeType String?
+
+  // OCR 결과 (Phase 4 Hermes AI에서 채움)
+  ocrStatus String? // PENDING/RUNNING/DONE/FAILED
+  ocrJson   Json?
+
+  createdAt DateTime @default(now())
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  expense   Expense   @relation(fields: [expenseId], references: [id], onDelete: Cascade)
+
+  @@index([workspaceId, expenseId])
+  @@map("expense_attachments")
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// 분석 (Analytics) — 외부 sync 없음 (정책 5-A). 환율 등 시스템 자료만.
+// ─────────────────────────────────────────────────────────────────────────
+
+model ExchangeRate {
+  id          String   @id @default(cuid())
+  workspaceId String?  // null = 전역 기본 (시스템 캐시), 워크스페이스 전용 환율도 가능
+
+  baseCurrency  String   @default("USD")
+  quoteCurrency String   @default("KRW")
+  rate          Float
+  effectiveDate DateTime
+  source        String?  // "manual" | "external_api" | "...".
+
+  createdAt DateTime @default(now())
+
+  workspace Workspace? @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@index([workspaceId, baseCurrency, effectiveDate])
+  @@map("exchange_rates")
+}
