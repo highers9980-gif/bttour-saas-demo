@@ -310,7 +310,7 @@ export default async function HotelCalendarPage({
           }
           extraRow={
             <>
-              <select className="h-9 rounded-lg border border-slate-300 px-3 text-sm">
+              <select className="h-11 rounded-lg border border-slate-300 px-3 text-base md:text-sm">
                 <option>{t('schedule.filter.hotel_all')}</option>
                 {hotelRows.map((hotel) => (
                   <option key={hotel.hotelId}>{hotel.hotelName}</option>

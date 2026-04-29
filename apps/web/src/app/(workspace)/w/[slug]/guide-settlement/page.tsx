@@ -515,7 +515,7 @@ export default async function GuideSettlementPage({
           </>
         }
         secondary={
-          <select className="h-9 rounded-lg border border-slate-300 px-3 text-sm">
+          <select className="h-11 rounded-lg border border-slate-300 px-3 text-base md:text-sm">
             <option>가이드: 전체</option>
             {guideOptions.map((guide) => (
               <option key={guide.id}>{guide.label}</option>

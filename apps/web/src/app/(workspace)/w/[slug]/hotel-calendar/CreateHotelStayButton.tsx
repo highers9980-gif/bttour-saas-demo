@@ -56,7 +56,7 @@ export function CreateHotelStayButton({
             <select
               name="teamId"
               required
-              className="h-10 w-full rounded-lg border border-slate-200 px-3 text-sm focus:border-navy-900 focus:outline-none focus:ring-1 focus:ring-navy-900"
+              className="h-11 w-full rounded-lg border border-slate-200 px-3 text-base md:text-sm focus:border-navy-900 focus:outline-none focus:ring-1 focus:ring-navy-900"
               defaultValue=""
             >
               <option value="">선택</option>
@@ -70,7 +70,7 @@ export function CreateHotelStayButton({
           <Field label="호텔">
             <select
               name="hotelId"
-              className="h-10 w-full rounded-lg border border-slate-200 px-3 text-sm focus:border-navy-900 focus:outline-none focus:ring-1 focus:ring-navy-900"
+              className="h-11 w-full rounded-lg border border-slate-200 px-3 text-base md:text-sm focus:border-navy-900 focus:outline-none focus:ring-1 focus:ring-navy-900"
               defaultValue=""
             >
               <option value="">직접 입력</option>

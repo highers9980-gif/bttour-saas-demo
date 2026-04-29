@@ -325,7 +325,7 @@ export default async function UserManagementPage({ params }: { params: { slug: s
                   <select
                     name="role"
                     disabled={!canInvite}
-                    className="h-10 w-full rounded-lg border border-slate-200 px-3 text-sm disabled:bg-slate-50"
+                    className="h-11 w-full rounded-lg border border-slate-200 px-3 text-base md:text-sm disabled:bg-slate-50"
                     defaultValue="MANAGER"
                   >
                     <option value="MANAGER">MANAGER</option>

@@ -217,7 +217,7 @@ export default async function TeamTimelinePage({
             </p>
           </div>
           <div className="flex gap-2">
-            <select className="h-9 rounded-lg border border-slate-300 px-3 text-sm">
+            <select className="h-11 rounded-lg border border-slate-300 px-3 text-base md:text-sm">
               <option>{t('schedule.filter.guide_all')}</option>
               {guideSummaries.map((guide) => (
                 <option key={guide.id}>{guide.name}</option>

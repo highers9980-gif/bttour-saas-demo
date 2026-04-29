@@ -99,7 +99,7 @@ export function VehicleSettlementFormButton({
             <select
               name="teamId"
               defaultValue={value?.teamId ?? ''}
-              className="h-10 w-full rounded-lg border border-slate-200 px-3 text-sm focus:border-navy-900 focus:outline-none focus:ring-1 focus:ring-navy-900"
+              className="h-11 w-full rounded-lg border border-slate-200 px-3 text-base md:text-sm focus:border-navy-900 focus:outline-none focus:ring-1 focus:ring-navy-900"
             >
               <option value="">선택 없음</option>
               {teams.map((team) => (
@@ -113,7 +113,7 @@ export function VehicleSettlementFormButton({
             <select
               name="vehicleId"
               defaultValue={value?.vehicleId ?? ''}
-              className="h-10 w-full rounded-lg border border-slate-200 px-3 text-sm focus:border-navy-900 focus:outline-none focus:ring-1 focus:ring-navy-900"
+              className="h-11 w-full rounded-lg border border-slate-200 px-3 text-base md:text-sm focus:border-navy-900 focus:outline-none focus:ring-1 focus:ring-navy-900"
             >
               <option value="">직접 입력</option>
               {vehicles.map((vehicle) => (
@@ -134,7 +134,7 @@ export function VehicleSettlementFormButton({
             <select
               name="partnerId"
               defaultValue={value?.partnerId ?? ''}
-              className="h-10 w-full rounded-lg border border-slate-200 px-3 text-sm focus:border-navy-900 focus:outline-none focus:ring-1 focus:ring-navy-900"
+              className="h-11 w-full rounded-lg border border-slate-200 px-3 text-base md:text-sm focus:border-navy-900 focus:outline-none focus:ring-1 focus:ring-navy-900"
             >
               <option value="">선택 없음</option>
               {partners.map((partner) => (

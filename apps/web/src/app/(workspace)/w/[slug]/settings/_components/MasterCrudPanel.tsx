@@ -97,7 +97,7 @@ function MasterFormFields({ fields, row }: { fields: MasterField[]; row?: Master
             <Field key={field.name} label={field.label} required={field.required}>
               <select
                 {...common}
-                className="h-10 w-full rounded-lg border border-slate-200 px-3 text-sm focus:border-navy-900 focus:outline-none focus:ring-1 focus:ring-navy-900"
+                className="h-11 w-full rounded-lg border border-slate-200 px-3 text-base md:text-sm focus:border-navy-900 focus:outline-none focus:ring-1 focus:ring-navy-900"
               >
                 <option value="">선택</option>
                 {(field.options ?? []).map((option) => (

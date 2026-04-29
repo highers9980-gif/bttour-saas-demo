@@ -557,19 +557,19 @@ export default async function SchedulePage({
           }
           extraRow={
             <>
-              <select className="h-9 rounded-lg border border-slate-300 px-3 text-sm">
+              <select className="h-11 rounded-lg border border-slate-300 px-3 text-base md:text-sm">
                 <option>{t('schedule.filter.guide_all')}</option>
                 {guides.map((guide) => (
                   <option key={guide.id}>{guide.name}</option>
                 ))}
               </select>
-              <select className="h-9 rounded-lg border border-slate-300 px-3 text-sm">
+              <select className="h-11 rounded-lg border border-slate-300 px-3 text-base md:text-sm">
                 <option>{t('schedule.filter.origin_all')}</option>
                 {[...new Set(rows.map((team) => team.originCode).filter(Boolean))].map((origin) => (
                   <option key={origin}>{origin}</option>
                 ))}
               </select>
-              <select className="h-9 rounded-lg border border-slate-300 px-3 text-sm">
+              <select className="h-11 rounded-lg border border-slate-300 px-3 text-base md:text-sm">
                 <option>{t('schedule.filter.status_all')}</option>
                 {['IN_PROGRESS', 'SCHEDULED', 'UNASSIGNED'].map((status) => (
                   <option key={status}>{status}</option>

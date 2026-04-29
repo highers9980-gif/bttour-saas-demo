@@ -162,7 +162,7 @@ export default async function InsightsPage({
               type="month"
               name="period"
               defaultValue={label}
-              className="h-10 rounded-lg border border-slate-300 px-3 text-sm focus:border-navy-900 focus:outline-none focus:ring-1 focus:ring-navy-900"
+              className="h-11 rounded-lg border border-slate-300 px-3 text-base md:text-sm focus:border-navy-900 focus:outline-none focus:ring-1 focus:ring-navy-900"
             />
             <Button type="submit" variant="outline">
               조회
@@ -190,7 +190,7 @@ export default async function InsightsPage({
             </div>
             <Link
               href={`/w/${params.slug}/settings/ai`}
-              className="inline-flex h-10 items-center justify-center rounded-lg bg-navy-900 px-4 text-sm font-semibold text-white"
+              className="inline-flex h-11 items-center justify-center rounded-lg bg-navy-900 px-4 text-sm font-semibold text-white"
             >
               AI 설정으로 이동
             </Link>

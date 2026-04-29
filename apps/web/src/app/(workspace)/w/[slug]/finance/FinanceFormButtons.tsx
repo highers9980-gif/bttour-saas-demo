@@ -46,7 +46,7 @@ export function WalletFormButton({
             <select
               name="kind"
               required
-              className="h-10 w-full rounded-lg border border-slate-200 px-3 text-sm focus:border-navy-900 focus:outline-none focus:ring-1 focus:ring-navy-900"
+              className="h-11 w-full rounded-lg border border-slate-200 px-3 text-base md:text-sm focus:border-navy-900 focus:outline-none focus:ring-1 focus:ring-navy-900"
               defaultValue="BANK"
             >
               <option value="BANK">BANK</option>
@@ -125,7 +125,7 @@ export function LedgerLineFormButton({
             <select
               name="walletId"
               required
-              className="h-10 w-full rounded-lg border border-slate-200 px-3 text-sm focus:border-navy-900 focus:outline-none focus:ring-1 focus:ring-navy-900"
+              className="h-11 w-full rounded-lg border border-slate-200 px-3 text-base md:text-sm focus:border-navy-900 focus:outline-none focus:ring-1 focus:ring-navy-900"
               defaultValue=""
             >
               <option value="">선택</option>
@@ -140,7 +140,7 @@ export function LedgerLineFormButton({
             <select
               name="entryType"
               required
-              className="h-10 w-full rounded-lg border border-slate-200 px-3 text-sm focus:border-navy-900 focus:outline-none focus:ring-1 focus:ring-navy-900"
+              className="h-11 w-full rounded-lg border border-slate-200 px-3 text-base md:text-sm focus:border-navy-900 focus:outline-none focus:ring-1 focus:ring-navy-900"
               defaultValue="DEPOSIT"
             >
               <option value="DEPOSIT">DEPOSIT</option>

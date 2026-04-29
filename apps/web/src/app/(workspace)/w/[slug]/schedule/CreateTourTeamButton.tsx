@@ -67,7 +67,7 @@ export function CreateTourTeamButton({
           <Field label="거래처">
             <select
               name="partnerId"
-              className="h-10 w-full rounded-lg border border-slate-200 px-3 text-sm focus:border-navy-900 focus:outline-none focus:ring-1 focus:ring-navy-900"
+              className="h-11 w-full rounded-lg border border-slate-200 px-3 text-base md:text-sm focus:border-navy-900 focus:outline-none focus:ring-1 focus:ring-navy-900"
               defaultValue=""
             >
               <option value="">직접 입력</option>
