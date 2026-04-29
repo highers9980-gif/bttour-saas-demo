@@ -1,12 +1,8 @@
-import {
-  Sidebar,
-  TopHeader,
-  type SidebarGroup,
-  type WorkspaceOption,
-} from '@bttour/ui';
+import { Sidebar, TopHeader, type SidebarGroup, type WorkspaceOption } from '@bttour/ui';
 import type { ReactNode } from 'react';
 import Image from 'next/image';
 import { AppLink } from './AppLink';
+import { LanguageSwitcher } from './LanguageSwitcher';
 
 export interface WorkspaceShellProps {
   workspaces: WorkspaceOption[];
@@ -59,11 +55,14 @@ export function WorkspaceShell({
         <TopHeader
           title={pageTitle}
           subtitle={pageSubtitle}
-          rightSlot={rightSlot}
+          rightSlot={
+            <>
+              <LanguageSwitcher />
+              {rightSlot}
+            </>
+          }
         />
-        <div className="flex-1 overflow-y-auto p-8 scroll-thin bg-slate-100">
-          {children}
-        </div>
+        <div className="flex-1 overflow-y-auto p-8 scroll-thin bg-slate-100">{children}</div>
       </div>
     </div>
   );

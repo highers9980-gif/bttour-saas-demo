@@ -3,6 +3,7 @@ import { auth } from '@/lib/auth';
 import { prisma } from '@bttour/db';
 import { WorkspaceShell } from '@/components/WorkspaceShell';
 import { buildSidebarGroups } from '@/lib/nav';
+import { getLocale, getTranslations } from 'next-intl/server';
 
 /**
  * 워크스페이스 컨텍스트 게이트.
@@ -21,6 +22,7 @@ export default async function WorkspaceLayout({
 }) {
   const session = await auth();
   if (!session?.user?.id) redirect('/signin');
+  const [locale, t] = await Promise.all([getLocale(), getTranslations()]);
 
   const memberships = await prisma.membership.findMany({
     where: { userId: session.user.id, status: 'ACTIVE' },
@@ -32,7 +34,31 @@ export default async function WorkspaceLayout({
   );
   if (!current) redirect('/w');
 
-  const groups = buildSidebarGroups(params.slug);
+  const groups = buildSidebarGroups(params.slug, {
+    operations: t('nav.group_operations'),
+    settlement: t('nav.group_settlement'),
+    accounting: t('nav.group_accounting'),
+    statisticsGroup: t('nav.group_statistics'),
+    admin: t('nav.group_admin'),
+    dashboard: t('nav.dashboard'),
+    schedule: t('nav.schedule'),
+    teamTimeline: t('nav.team_timeline'),
+    hotelCalendar: t('nav.hotel_calendar'),
+    guideSettlement: t('nav.guide_settlement'),
+    vehicle: t('nav.vehicle'),
+    shoppingFee: t('nav.shopping_fee'),
+    receivables: t('nav.receivables'),
+    finance: t('nav.finance'),
+    expense: t('nav.expense'),
+    revenue: t('nav.revenue'),
+    statistics: t('nav.statistics'),
+    monthlyInsight: t('nav.monthly_insight'),
+    hermesSupervisor: t('nav.hermes_supervisor'),
+    guideRecommend: t('nav.guide_recommend'),
+    userManagement: t('nav.user_management'),
+    settings: t('nav.settings'),
+    billing: t('nav.billing'),
+  });
 
   return (
     <WorkspaceShell
@@ -52,13 +78,16 @@ export default async function WorkspaceLayout({
         email: session.user.email ?? '',
         role: current.role,
       }}
-      pageTitle="대시보드"
-      pageSubtitle={new Date().toLocaleDateString('ko-KR', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-        weekday: 'long',
-      })}
+      pageTitle={t('nav.dashboard')}
+      pageSubtitle={new Date().toLocaleDateString(
+        locale === 'zh' ? 'zh-CN' : locale === 'en' ? 'en-US' : 'ko-KR',
+        {
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric',
+          weekday: 'long',
+        },
+      )}
     >
       {children}
     </WorkspaceShell>
