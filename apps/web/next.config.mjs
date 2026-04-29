@@ -1,9 +1,29 @@
 import path from 'path';
 import { fileURLToPath } from 'url';
+import fs from 'fs';
 import createNextIntlPlugin from 'next-intl/plugin';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const withNextIntl = createNextIntlPlugin('./src/i18n/request.ts');
+
+function loadRootEnv() {
+  const envPath = path.join(__dirname, '../../.env');
+  if (!fs.existsSync(envPath)) return;
+
+  const lines = fs.readFileSync(envPath, 'utf8').split(/\r?\n/);
+  for (const line of lines) {
+    if (!line || line.trimStart().startsWith('#')) continue;
+    const index = line.indexOf('=');
+    if (index <= 0) continue;
+
+    const key = line.slice(0, index).trim();
+    const rawValue = line.slice(index + 1).trim();
+    if (!key || process.env[key] !== undefined) continue;
+    process.env[key] = rawValue.replace(/^["']|["']$/g, '');
+  }
+}
+
+loadRootEnv();
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
