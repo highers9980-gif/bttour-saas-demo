@@ -146,7 +146,7 @@ export function WorkspaceShell({
             </>
           }
         />
-        <div className="flex-1 overflow-y-auto bg-slate-100 p-4 pb-[88px] scroll-thin lg:p-8 lg:pb-8">{children}</div>
+        <div className="flex-1 overflow-y-auto bg-slate-100 p-4 pb-[88px] scroll-thin md:pb-8 lg:p-8">{children}</div>
       </div>
       <BottomTabBar
         LinkComponent={AppLink}
