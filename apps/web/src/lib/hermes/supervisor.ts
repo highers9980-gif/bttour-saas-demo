@@ -1,4 +1,5 @@
 import { prisma, Prisma } from '@bttour/db';
+import type { HermesJobMetadata, MonthlyInsightAutoMetadata } from '@bttour/shared';
 import { generateMonthlyInsightCore, periodLabel } from '@/lib/insights/generate';
 
 interface SupervisorJobResult {
@@ -57,7 +58,7 @@ async function writeHermesAudit({
   workspaceId,
 }: {
   action: 'hermes.cron.fired' | 'hermes.workflow.completed' | 'hermes.workflow.failed';
-  metadata?: Record<string, unknown>;
+  metadata?: Prisma.InputJsonObject;
   targetId?: string;
   workspaceId?: string | null;
 }) {
@@ -71,6 +72,10 @@ async function writeHermesAudit({
       metadata: metadata as Prisma.InputJsonObject,
     },
   });
+}
+
+function metadataJson(metadata: HermesJobMetadata): Prisma.InputJsonObject {
+  return metadata as unknown as Prisma.InputJsonObject;
 }
 
 async function findSystemActor(workspaceId: string) {
@@ -101,13 +106,19 @@ async function runMonthlyInsightForWorkspace({
   scheduledAt: Date;
   workspaceId: string;
 }): Promise<SupervisorJobResult> {
+  const pendingMetadata: MonthlyInsightAutoMetadata = {
+    workflow: 'MONTHLY_INSIGHT_AUTO',
+    periodYear,
+    periodMonth,
+    periodLabel: periodLabel(periodYear, periodMonth),
+  };
   const job = await prisma.hermesJob.create({
     data: {
       workspaceId,
       workflow: 'MONTHLY_INSIGHT_AUTO',
       status: 'PENDING',
       scheduledAt,
-      metadata: { periodYear, periodMonth } as Prisma.InputJsonObject,
+      metadata: metadataJson(pendingMetadata),
     },
   });
 
@@ -132,7 +143,7 @@ async function runMonthlyInsightForWorkspace({
       action: 'hermes.workflow.failed',
       targetId: job.id,
       workspaceId,
-      metadata: { workflow: 'MONTHLY_INSIGHT_AUTO', errorMessage },
+      metadata: { ...pendingMetadata, errorMessage },
     });
     return {
       workflow: 'MONTHLY_INSIGHT_AUTO',
@@ -152,6 +163,11 @@ async function runMonthlyInsightForWorkspace({
   });
 
   if (!result.ok) {
+    const failedMetadata: MonthlyInsightAutoMetadata = {
+      ...pendingMetadata,
+      insightId: result.insightId,
+      errorMessage: result.error,
+    };
     await prisma.hermesJob.update({
       where: { id: job.id },
       data: {
@@ -160,24 +176,14 @@ async function runMonthlyInsightForWorkspace({
         recordsProcessed: 0,
         errorCode: result.errorCode ?? 'UNKNOWN',
         errorMessage: result.error,
-        metadata: {
-          periodYear,
-          periodMonth,
-          insightId: result.insightId,
-          periodLabel: periodLabel(periodYear, periodMonth),
-        } as Prisma.InputJsonObject,
+        metadata: metadataJson(failedMetadata),
       },
     });
     await writeHermesAudit({
       action: 'hermes.workflow.failed',
       targetId: job.id,
       workspaceId,
-      metadata: {
-        workflow: 'MONTHLY_INSIGHT_AUTO',
-        periodLabel: periodLabel(periodYear, periodMonth),
-        insightId: result.insightId,
-        errorMessage: result.error,
-      },
+      metadata: metadataJson(failedMetadata),
     });
     return {
       workflow: 'MONTHLY_INSIGHT_AUTO',
@@ -189,33 +195,27 @@ async function runMonthlyInsightForWorkspace({
     };
   }
 
+  const successMetadata: MonthlyInsightAutoMetadata = {
+    ...pendingMetadata,
+    insightId: result.insightId,
+    provider: result.provider,
+    modelName: result.modelName,
+    latencyMs: result.latencyMs,
+  };
   await prisma.hermesJob.update({
     where: { id: job.id },
     data: {
       status: 'SUCCESS',
       completedAt: new Date(),
       recordsProcessed: 1,
-      metadata: {
-        periodYear,
-        periodMonth,
-        periodLabel: periodLabel(periodYear, periodMonth),
-        insightId: result.insightId,
-        provider: result.provider,
-        modelName: result.modelName,
-        latencyMs: result.latencyMs,
-      } as Prisma.InputJsonObject,
+      metadata: metadataJson(successMetadata),
     },
   });
   await writeHermesAudit({
     action: 'hermes.workflow.completed',
     targetId: job.id,
     workspaceId,
-    metadata: {
-      workflow: 'MONTHLY_INSIGHT_AUTO',
-      periodLabel: periodLabel(periodYear, periodMonth),
-      insightId: result.insightId,
-      latencyMs: result.latencyMs,
-    },
+    metadata: metadataJson(successMetadata),
   });
 
   return {
@@ -258,7 +258,7 @@ export async function runHermesSupervisor(now = new Date()) {
     action: 'hermes.cron.fired',
     metadata: {
       firedAt: now.toISOString(),
-      kst: parts,
+      kst: parts as unknown as Prisma.InputJsonObject,
     },
   });
 
