@@ -22,10 +22,27 @@ export interface GuideSettlementPdfData {
   issuedBy: string;
 }
 
-function fontPath(fileName: string) {
+// @fontsource/noto-sans-kr 패키지의 한국어 subset woff2를 사용.
+// 기존 ttf 직접 번들(각 10.4MB) → woff2 한국어 subset(각 ~540KB)로 95% 감소.
+// 모노레포 hoisting 동작이 환경마다 다를 수 있어 다중 후보 path를 existsSync로 탐색.
+function fontPath(weight: 400 | 700) {
+  const fileName = `noto-sans-kr-korean-${weight}-normal.woff2`;
   const candidates = [
-    path.join(process.cwd(), 'public', 'fonts', fileName),
-    path.join(process.cwd(), 'apps', 'web', 'public', 'fonts', fileName),
+    // npm v7+ workspace 기본 — 루트 node_modules로 hoist
+    path.join(process.cwd(), 'node_modules', '@fontsource', 'noto-sans-kr', 'files', fileName),
+    // apps/web 로컬 node_modules (hoist 실패 시 fallback)
+    path.join(
+      process.cwd(),
+      'apps',
+      'web',
+      'node_modules',
+      '@fontsource',
+      'noto-sans-kr',
+      'files',
+      fileName,
+    ),
+    // cwd가 apps/web인 경우 (Vercel build) — 루트로 두 단계 위
+    path.join(process.cwd(), '..', '..', 'node_modules', '@fontsource', 'noto-sans-kr', 'files', fileName),
   ];
   return candidates.find((candidate) => existsSync(candidate)) ?? candidates[0]!;
 }
@@ -33,8 +50,8 @@ function fontPath(fileName: string) {
 Font.register({
   family: 'NotoSansKR',
   fonts: [
-    { src: fontPath('NotoSansKR-Regular.ttf'), fontWeight: 400 },
-    { src: fontPath('NotoSansKR-Bold.ttf'), fontWeight: 700 },
+    { src: fontPath(400), fontWeight: 400 },
+    { src: fontPath(700), fontWeight: 700 },
   ],
 });
 

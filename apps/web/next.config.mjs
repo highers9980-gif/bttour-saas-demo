@@ -14,13 +14,15 @@ const nextConfig = {
   // experimental에 두면 deprecation 경고 발생하므로 top-level로 이동.
   // 모노레포 루트 명시 — Vercel이 ../../packages/db도 trace 영역에 포함.
   outputFileTracingRoot: path.join(__dirname, '../../'),
-  // Prisma .prisma/client (hoisted 루트) + 한국어 폰트를 함수 번들에 강제 포함
+  // Prisma .prisma/client (hoisted 루트) + 한국어 폰트(woff2 subset)를 함수 번들에 강제 포함.
+  // @fontsource/noto-sans-kr의 한국어 + Regular(400)/Bold(700) + woff2만 정확히 trace해서
+  // 다른 weight/subset(latin/vietnamese/cyrillic 등)을 제외 → 빌드 사이즈 최소화.
   outputFileTracingIncludes: {
     '/**/*': [
       '../../node_modules/.prisma/client/**/*',
       '../../node_modules/@prisma/client/**/*',
-      'public/fonts/**/*',
-      '../../apps/web/public/fonts/**/*',
+      '../../node_modules/@fontsource/noto-sans-kr/files/noto-sans-kr-korean-400-normal.woff2',
+      '../../node_modules/@fontsource/noto-sans-kr/files/noto-sans-kr-korean-700-normal.woff2',
     ],
   },
   experimental: {
