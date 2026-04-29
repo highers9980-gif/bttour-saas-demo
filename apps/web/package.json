@@ -10,10 +10,11 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@auth/prisma-adapter": "^2.7.4",
     "@bttour/db": "*",
     "@bttour/shared": "*",
     "@bttour/ui": "*",
-    "@auth/prisma-adapter": "^2.7.4",
+    "@react-pdf/renderer": "^4.5.1",
     "next": "^14.2.18",
     "next-auth": "5.0.0-beta.25",
     "next-intl": "^3.26.0",
