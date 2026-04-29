@@ -74,13 +74,18 @@ async function writeHermesAudit({
 }
 
 async function findSystemActor(workspaceId: string) {
+  // OWNER 우선 검색, 없으면 ADMIN으로 fallback.
+  // role: 'asc'는 알파벳 순서라 ADMIN(A)이 OWNER(O)보다 먼저 매칭되는 문제를
+  // 회피하기 위해 분리 쿼리로 명시적 우선순위 보장.
+  const owner = await prisma.membership.findFirst({
+    where: { workspaceId, status: 'ACTIVE', role: 'OWNER' },
+    orderBy: { createdAt: 'asc' },
+    select: { userId: true },
+  });
+  if (owner) return owner;
   return prisma.membership.findFirst({
-    where: {
-      workspaceId,
-      status: 'ACTIVE',
-      role: { in: ['OWNER', 'ADMIN'] },
-    },
-    orderBy: [{ role: 'asc' }, { createdAt: 'asc' }],
+    where: { workspaceId, status: 'ACTIVE', role: 'ADMIN' },
+    orderBy: { createdAt: 'asc' },
     select: { userId: true },
   });
 }
