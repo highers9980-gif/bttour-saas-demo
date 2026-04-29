@@ -23,6 +23,8 @@ const nextConfig = {
       '/**/*': [
         '../../node_modules/.prisma/client/**/*',
         '../../node_modules/@prisma/client/**/*',
+        'public/fonts/**/*',
+        '../../apps/web/public/fonts/**/*',
       ],
     },
   },
