@@ -10,14 +10,16 @@ import type { ReactNode } from 'react';
 export function AppLink({
   href,
   className,
+  onClick,
   children,
 }: {
   href: string;
   className?: string;
+  onClick?: () => void;
   children: ReactNode;
 }) {
   return (
-    <NextLink href={href} className={className}>
+    <NextLink href={href} className={className} onClick={onClick}>
       {children}
     </NextLink>
   );

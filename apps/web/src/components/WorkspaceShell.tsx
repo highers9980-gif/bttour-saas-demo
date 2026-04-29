@@ -1,6 +1,7 @@
+'use client';
+
 import { Sidebar, TopHeader, type SidebarGroup, type WorkspaceOption } from '@bttour/ui';
-import type { ReactNode } from 'react';
-import Image from 'next/image';
+import { useEffect, useState, type ReactNode } from 'react';
 import { AppLink } from './AppLink';
 import { LanguageSwitcher } from './LanguageSwitcher';
 
@@ -28,10 +29,41 @@ export function WorkspaceShell({
   rightSlot,
   children,
 }: WorkspaceShellProps) {
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const userInitial = user.name.slice(0, 1);
+
+  useEffect(() => {
+    if (!sidebarOpen) return;
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setSidebarOpen(false);
+      }
+    };
+
+    window.addEventListener('keydown', onKeyDown);
+    document.body.style.overflow = 'hidden';
+
+    return () => {
+      window.removeEventListener('keydown', onKeyDown);
+      document.body.style.overflow = '';
+    };
+  }, [sidebarOpen]);
+
   return (
     <div className="flex h-screen overflow-hidden">
+      {sidebarOpen && (
+        <button
+          type="button"
+          aria-label="메뉴 닫기"
+          className="fixed inset-0 z-30 bg-slate-950/40 md:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
       <Sidebar
         LinkComponent={AppLink}
+        open={sidebarOpen}
+        onClose={() => setSidebarOpen(false)}
         brand={
           <div className="flex items-center gap-2.5">
             <span className="font-bold text-lg">BT TOUR ERP</span>
@@ -55,6 +87,9 @@ export function WorkspaceShell({
         <TopHeader
           title={pageTitle}
           subtitle={pageSubtitle}
+          workspaceName={currentWorkspace.name}
+          userInitial={userInitial}
+          onMenuClick={() => setSidebarOpen(true)}
           rightSlot={
             <>
               <LanguageSwitcher />
@@ -62,7 +97,7 @@ export function WorkspaceShell({
             </>
           }
         />
-        <div className="flex-1 overflow-y-auto p-8 scroll-thin bg-slate-100">{children}</div>
+        <div className="flex-1 overflow-y-auto bg-slate-100 p-4 scroll-thin md:p-8">{children}</div>
       </div>
     </div>
   );

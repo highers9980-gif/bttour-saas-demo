@@ -1,3 +1,5 @@
+'use client';
+
 import type { ReactNode } from 'react';
 import { cn } from '../lib/cn';
 
@@ -26,8 +28,11 @@ export interface SidebarProps {
   LinkComponent?: React.ComponentType<{
     href: string;
     className?: string;
+    onClick?: () => void;
     children: ReactNode;
   }>;
+  open?: boolean;
+  onClose?: () => void;
 }
 
 /**
@@ -42,11 +47,13 @@ export function Sidebar({
   footer,
   className,
   LinkComponent,
+  open = false,
+  onClose,
 }: SidebarProps) {
   const Link =
     LinkComponent ??
-    (({ href, className: c, children }) => (
-      <a href={href} className={c}>
+    (({ href, className: c, onClick, children }) => (
+      <a href={href} className={c} onClick={onClick}>
         {children}
       </a>
     ));
@@ -54,7 +61,9 @@ export function Sidebar({
   return (
     <aside
       className={cn(
-        'w-64 bg-navy-900 text-white flex flex-col h-screen sticky top-0',
+        'fixed inset-y-0 left-0 z-40 w-64 bg-navy-900 text-white flex flex-col h-[100dvh] transform transition-transform duration-200 ease-out',
+        open ? 'translate-x-0' : '-translate-x-full',
+        'md:static md:translate-x-0 md:h-screen md:shrink-0',
         className,
       )}
     >
@@ -77,6 +86,7 @@ export function Sidebar({
               <Link
                 key={item.key}
                 href={item.href}
+                onClick={onClose}
                 className={cn(
                   'flex items-center gap-3 px-4 py-2 mx-2 rounded-lg text-sm transition',
                   item.active
