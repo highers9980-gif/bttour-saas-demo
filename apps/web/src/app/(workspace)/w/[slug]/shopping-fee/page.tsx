@@ -534,7 +534,7 @@ export default async function ShoppingFeePage({
         }
       />
 
-      <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+      <div className="grid gap-4 md:grid-cols-4">
         {categorySummary.length === 0 ? (
           <KpiCard label="쇼핑 매출" value="0" unit="원" />
         ) : (

@@ -455,7 +455,7 @@ export default async function ReceivablesPage({
         }
       />
 
-      <div className="grid grid-cols-2 gap-4 md:grid-cols-5">
+      <div className="grid gap-4 md:grid-cols-5">
         <KpiCard
           label="총 미수금"
           value={formatWonDisplay(totalBalanceKrw, { roundStep: 5000 })}
