@@ -5,7 +5,7 @@
 // 받은 뒤 Phase 2에서 추가한다. 추가 시 모든 테이블에는 `workspaceId` 필수.
 
 generator client {
-  provider = "prisma-client-js"
+  provider      = "prisma-client-js"
   // 표준 위치(node_modules/.prisma/client) 사용 — Vercel/Next.js가 자동 trace.
   // 이전엔 모노레포 hoisting EPERM 우려로 custom output 사용했으나
   // Vercel deploy에서 .so 엔진 누락 문제로 표준 위치로 복귀.
@@ -34,13 +34,14 @@ model User {
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
-  accounts    Account[]
-  sessions    Session[]
-  memberships Membership[]
-  invitesSent Invitation[] @relation("InvitedBy")
-  receiptOcrJobs ReceiptOcrJob[]
-  settlementPdfJobs SettlementPdfJob[]
-  monthlyInsights MonthlyInsight[]
+  accounts           Account[]
+  sessions           Session[]
+  memberships        Membership[]
+  invitesSent        Invitation[]        @relation("InvitedBy")
+  receiptOcrJobs     ReceiptOcrJob[]
+  settlementPdfJobs  SettlementPdfJob[]
+  monthlyInsights    MonthlyInsight[]
+  scheduleChangeLogs ScheduleChangeLog[]
 
   @@map("users")
 }
@@ -90,8 +91,8 @@ model VerificationToken {
 // ─────────────────────────────────────────────────────────────────────────
 
 model Workspace {
-  id        String   @id @default(cuid())
-  slug      String   @unique // URL 식별자: /w/[slug]
+  id        String  @id @default(cuid())
+  slug      String  @unique // URL 식별자: /w/[slug]
   name      String
   logoUrl   String?
   // 사업자 정보 (도면 footer 영역)
@@ -116,40 +117,43 @@ model Workspace {
   auditLogs    AuditLog[]
 
   // Phase 2 도메인 (마스터/운영/정산/회계/분석)
-  partners               Partner[]
-  guides                 Guide[]
-  hotels                 Hotel[]
-  vehicles               Vehicle[]
-  drivers                Driver[]
-  shoppingCenters        ShoppingCenter[]
-  tourTeams              TourTeam[]
-  teamGuideAssignments   TeamGuideAssignment[]
-  teamHotelStays         TeamHotelStay[]
-  teamVehicleAssignments TeamVehicleAssignment[]
-  guideSettlements       GuideSettlement[]
-  guideSettlementPayments GuideSettlementPayment[]
-  vehicleSettlements     VehicleSettlement[]
+  partners                  Partner[]
+  guides                    Guide[]
+  hotels                    Hotel[]
+  vehicles                  Vehicle[]
+  drivers                   Driver[]
+  shoppingCenters           ShoppingCenter[]
+  tourTeams                 TourTeam[]
+  teamGuideAssignments      TeamGuideAssignment[]
+  teamHotelStays            TeamHotelStay[]
+  teamVehicleAssignments    TeamVehicleAssignment[]
+  guideSettlements          GuideSettlement[]
+  guideSettlementPayments   GuideSettlementPayment[]
+  vehicleSettlements        VehicleSettlement[]
   vehicleSettlementPayments VehicleSettlementPayment[]
-  shoppingSales          ShoppingSale[]
-  shoppingCommissions    ShoppingCommission[]
-  financeWallets         FinanceWallet[]
-  financeLedgerLines     FinanceLedgerLine[]
-  receivables            Receivable[]
-  receivablePayments     ReceivablePayment[]
-  expenses               Expense[]
-  expenseAttachments     ExpenseAttachment[]
-  exchangeRates          ExchangeRate[]
+  shoppingSales             ShoppingSale[]
+  shoppingCommissions       ShoppingCommission[]
+  financeWallets            FinanceWallet[]
+  financeLedgerLines        FinanceLedgerLine[]
+  receivables               Receivable[]
+  receivablePayments        ReceivablePayment[]
+  expenses                  Expense[]
+  expenseAttachments        ExpenseAttachment[]
+  exchangeRates             ExchangeRate[]
 
   // Phase 4 통합 (AI / 메시징 / 백업)
-  aiSettings             WorkspaceAiSettings?
-  aiProviderConfigs      WorkspaceAiProviderConfig[]
-  aiJobs                 AiJob[]
-  messagingSettings      WorkspaceMessagingSettings?
-  backupSettings         WorkspaceBackupSettings?
-  backupExports          BackupExportJob[]
-  receiptOcrJobs         ReceiptOcrJob[]
-  settlementPdfJobs      SettlementPdfJob[]
-  monthlyInsights        MonthlyInsight[]
+  aiSettings         WorkspaceAiSettings?
+  aiProviderConfigs  WorkspaceAiProviderConfig[]
+  aiJobs             AiJob[]
+  messagingSettings  WorkspaceMessagingSettings?
+  backupSettings     WorkspaceBackupSettings?
+  backupExports      BackupExportJob[]
+  receiptOcrJobs     ReceiptOcrJob[]
+  settlementPdfJobs  SettlementPdfJob[]
+  monthlyInsights    MonthlyInsight[]
+  hermesJobs         HermesJob[]
+  automationSettings WorkspaceAutomationSettings?
+  scheduleChangeLogs ScheduleChangeLog[]
 
   @@index([deletedAt])
   @@map("workspaces")
@@ -189,15 +193,15 @@ model Membership {
 }
 
 model Invitation {
-  id          String   @id @default(cuid())
+  id          String    @id @default(cuid())
   workspaceId String
   email       String
-  role        Role     @default(VIEWER)
-  token       String   @unique
+  role        Role      @default(VIEWER)
+  token       String    @unique
   invitedById String
   expiresAt   DateTime
   acceptedAt  DateTime?
-  createdAt   DateTime @default(now())
+  createdAt   DateTime  @default(now())
 
   workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
   invitedBy User      @relation("InvitedBy", fields: [invitedById], references: [id])
@@ -227,21 +231,21 @@ enum SubscriptionStatus {
 }
 
 model Plan {
-  code            PlanCode @id
-  name            String // 표기용 명칭 (한국어)
-  monthlyPriceKrw Int
+  code             PlanCode @id
+  name             String // 표기용 명칭 (한국어)
+  monthlyPriceKrw  Int
   // 사용량 한도 (도면 PRICING 카드 기준)
-  maxUsers        Int
+  maxUsers         Int
   maxTeamsPerMonth Int? // null = 무제한
-  alimtalkQuota   Int? // null = 무제한
-  aiEnabled       Boolean  @default(false)
-  aiCreditIncluded Int     @default(0)
+  alimtalkQuota    Int? // null = 무제한
+  aiEnabled        Boolean  @default(false)
+  aiCreditIncluded Int      @default(0)
   // 셋업 비용 (1회성)
-  setupFeeKrw     Int      @default(0)
+  setupFeeKrw      Int      @default(0)
   // 부가 메타
-  description     String?
-  highlight       Boolean  @default(false) // 도면 "가장 인기" 배지 표시 여부
-  sortOrder       Int      @default(0)
+  description      String?
+  highlight        Boolean  @default(false) // 도면 "가장 인기" 배지 표시 여부
+  sortOrder        Int      @default(0)
 
   subscriptions Subscription[]
 
@@ -249,21 +253,21 @@ model Plan {
 }
 
 model Subscription {
-  id          String             @id @default(cuid())
-  workspaceId String             @unique
-  planCode    PlanCode
-  status      SubscriptionStatus @default(TRIALING)
+  id                 String             @id @default(cuid())
+  workspaceId        String             @unique
+  planCode           PlanCode
+  status             SubscriptionStatus @default(TRIALING)
   // 청구 주기
   currentPeriodStart DateTime
   currentPeriodEnd   DateTime
-  cancelAtPeriodEnd  Boolean   @default(false)
+  cancelAtPeriodEnd  Boolean            @default(false)
   canceledAt         DateTime?
   trialEndsAt        DateTime?
   // 토스페이먼츠 빌링키 등 외부 식별자 (Phase 3에서 활성화)
   externalCustomerId String?
   externalBillingKey String?
-  createdAt          DateTime  @default(now())
-  updatedAt          DateTime  @updatedAt
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
 
   workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
   plan      Plan      @relation(fields: [planCode], references: [code])
@@ -293,17 +297,17 @@ enum AiAgentKind {
 }
 
 model AiCreditLedger {
-  id          String            @id @default(cuid())
-  workspaceId String
-  type        AiCreditEntryType
-  amount      Int // GRANT/REFUND는 양수, DEBIT/EXPIRE는 음수
+  id           String            @id @default(cuid())
+  workspaceId  String
+  type         AiCreditEntryType
+  amount       Int // GRANT/REFUND는 양수, DEBIT/EXPIRE는 음수
   balanceAfter Int
-  reason      String?
-  agent       AiAgentKind?
+  reason       String?
+  agent        AiAgentKind?
   // 사용 차감의 경우 어떤 작업이었는지 추적
-  refType     String? // 예: "GuideSettlement", "Receivable" 등
-  refId       String?
-  createdAt   DateTime          @default(now())
+  refType      String? // 예: "GuideSettlement", "Receivable" 등
+  refId        String?
+  createdAt    DateTime          @default(now())
 
   workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
 
@@ -363,7 +367,7 @@ enum Locale {
 // ─────────────────────────────────────────────────────────────────────────
 
 enum PartnerKind {
-  AGENCY          // 인바운드 에이전트
+  AGENCY // 인바운드 에이전트
   HOTEL_VENDOR
   VEHICLE_VENDOR
   SHOPPING_CENTER // (별도 ShoppingCenter 테이블도 있음 — 거래처 일반 view용)
@@ -372,73 +376,73 @@ enum PartnerKind {
 }
 
 model Partner {
-  id          String   @id @default(cuid())
-  workspaceId String
-  name        String
-  kind        PartnerKind @default(AGENCY)
-  contactName String?
+  id           String      @id @default(cuid())
+  workspaceId  String
+  name         String
+  kind         PartnerKind @default(AGENCY)
+  contactName  String?
   contactPhone String?
   contactEmail String?
-  region      String?
-  memo        String?
-  active      Boolean  @default(true)
+  region       String?
+  memo         String?
+  active       Boolean     @default(true)
 
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  deletedAt   DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
 
-  workspace            Workspace            @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
-  tourTeams            TourTeam[]
-  guideSettlements     GuideSettlement[]
-  vehicleSettlements   VehicleSettlement[]
-  receivables          Receivable[]
+  workspace          Workspace           @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  tourTeams          TourTeam[]
+  guideSettlements   GuideSettlement[]
+  vehicleSettlements VehicleSettlement[]
+  receivables        Receivable[]
 
   @@index([workspaceId, active, kind])
   @@map("partners")
 }
 
 model Guide {
-  id          String   @id @default(cuid())
+  id          String  @id @default(cuid())
   workspaceId String
   name        String
-  region      String?  // 가이드 활동 지역
+  region      String? // 가이드 활동 지역
   phone       String?
   email       String?
-  language    String?  // 한국어/중국어/베트남어 등
-  colorKey    String?  // 일정현황/타임라인 가이드 색상 안정 hash
+  language    String? // 한국어/중국어/베트남어 등
+  colorKey    String? // 일정현황/타임라인 가이드 색상 안정 hash
   memo        String?
-  active      Boolean  @default(true)
+  active      Boolean @default(true)
 
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  deletedAt   DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
 
-  workspace          Workspace            @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
-  guideAssignments   TeamGuideAssignment[]
-  guideSettlements   GuideSettlement[]
-  shoppingSales      ShoppingSale[]
+  workspace        Workspace             @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  guideAssignments TeamGuideAssignment[]
+  guideSettlements GuideSettlement[]
+  shoppingSales    ShoppingSale[]
 
   @@index([workspaceId, active])
   @@map("guides")
 }
 
 model Hotel {
-  id          String   @id @default(cuid())
+  id          String  @id @default(cuid())
   workspaceId String
   name        String
   address     String?
   phone       String?
-  rank        Int?     // 1~5
+  rank        Int? // 1~5
   region      String?
   contactName String?
   memo        String?
-  active      Boolean  @default(true)
+  active      Boolean @default(true)
 
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  deletedAt   DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
 
-  workspace  Workspace        @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  workspace  Workspace       @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
   hotelStays TeamHotelStay[]
 
   @@index([workspaceId, active])
@@ -446,19 +450,19 @@ model Hotel {
 }
 
 model Vehicle {
-  id          String   @id @default(cuid())
+  id          String  @id @default(cuid())
   workspaceId String
-  label       String   // 차량 식별 라벨 (예: "서울 25인승 #1")
-  vehicleType String?  // 25인승/45인승/세단 등
+  label       String // 차량 식별 라벨 (예: "서울 25인승 #1")
+  vehicleType String? // 25인승/45인승/세단 등
   plateNumber String?
-  region      String?  // 부산/서울/제주
+  region      String? // 부산/서울/제주
   vendor      String?
   memo        String?
-  active      Boolean  @default(true)
+  active      Boolean @default(true)
 
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  deletedAt   DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
 
   workspace          Workspace               @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
   drivers            Driver[]
@@ -470,17 +474,17 @@ model Vehicle {
 }
 
 model Driver {
-  id          String   @id @default(cuid())
+  id          String  @id @default(cuid())
   workspaceId String
   vehicleId   String?
   name        String
   phone       String?
   memo        String?
-  active      Boolean  @default(true)
+  active      Boolean @default(true)
 
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  deletedAt   DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
 
   workspace          Workspace               @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
   vehicle            Vehicle?                @relation(fields: [vehicleId], references: [id], onDelete: SetNull)
@@ -491,21 +495,21 @@ model Driver {
 }
 
 model ShoppingCenter {
-  id          String   @id @default(cuid())
-  workspaceId String
-  name        String
-  category    String?  // 인삼/적송/화장품/영지 등
-  region      String?
-  sortOrder   Int      @default(0)
+  id                           String  @id @default(cuid())
+  workspaceId                  String
+  name                         String
+  category                     String? // 인삼/적송/화장품/영지 등
+  region                       String?
+  sortOrder                    Int     @default(0)
   // 기본 수수료율 (%) — 매출 등록 시 폼에 미리 채워짐. null이면 사용자가 매번 수동 입력.
   // 정책 결정(2026-04-29): 품목/매출별 다른 수수료율 허용을 위해 항상 폼에서 override 가능.
   defaultCommissionRatePercent Float?
-  memo        String?
-  active      Boolean  @default(true)
+  memo                         String?
+  active                       Boolean @default(true)
 
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  deletedAt   DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
 
   workspace   Workspace            @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
   sales       ShoppingSale[]
@@ -533,13 +537,13 @@ enum AssignmentStatus {
 }
 
 model TourTeam {
-  id          String   @id @default(cuid())
+  id          String @id @default(cuid())
   workspaceId String
 
   // 팀 식별 (정책 7-A: workspace + year + month + teamNo unique)
-  year        Int
-  month       Int
-  teamNo      Int
+  year   Int
+  month  Int
+  teamNo Int
 
   // 거래처 — 마스터 + snapshot 동시 (정책 8-C)
   partnerId           String?
@@ -547,18 +551,18 @@ model TourTeam {
   agentLabel          String?
 
   // 일정
-  startDate   DateTime
-  endDate     DateTime
-  groupName   String?
+  startDate DateTime
+  endDate   DateTime
+  groupName String?
 
   // 인원
-  paxAdult    Int      @default(0)
-  paxChild    Int      @default(0)
-  paxInfant   Int      @default(0)
-  paxTc       Int      @default(0)
+  paxAdult  Int @default(0)
+  paxChild  Int @default(0)
+  paxInfant Int @default(0)
+  paxTc     Int @default(0)
 
   // 객실
-  roomCount       Int      @default(0)
+  roomCount       Int     @default(0)
   roomComposition String?
 
   // 출발지/항공
@@ -567,13 +571,13 @@ model TourTeam {
   flightIn    String?
   flightOut   String?
 
-  tourType    String?
-  starRating  Int?
-  status      TourTeamStatus @default(SCHEDULED)
-  memo        String?
+  tourType   String?
+  starRating Int?
+  status     TourTeamStatus @default(SCHEDULED)
+  memo       String?
 
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
   createdById String?
   updatedById String?
   deletedAt   DateTime?
@@ -597,22 +601,22 @@ model TourTeam {
 }
 
 model TeamGuideAssignment {
-  id          String   @id @default(cuid())
+  id          String @id @default(cuid())
   workspaceId String
   teamId      String
 
   guideId           String?
-  guideNameSnapshot String   // 마스터 미연결시도 항상 저장
+  guideNameSnapshot String // 마스터 미연결시도 항상 저장
 
-  role        String   @default("LEAD") // LEAD/SUB/INTERPRETER
-  status      AssignmentStatus @default(TENTATIVE)
+  role   String           @default("LEAD") // LEAD/SUB/INTERPRETER
+  status AssignmentStatus @default(TENTATIVE)
 
-  startDate   DateTime?
-  endDate     DateTime?
-  memo        String?
+  startDate DateTime?
+  endDate   DateTime?
+  memo      String?
 
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
   team      TourTeam  @relation(fields: [teamId], references: [id], onDelete: Cascade)
@@ -624,12 +628,12 @@ model TeamGuideAssignment {
 }
 
 enum HotelStaySource {
-  MANUAL          // 호텔 캘린더에서 수동 입력
-  SCHEDULE_AUTO   // 일정현황 팀 호텔 배정으로 자동 표시
+  MANUAL // 호텔 캘린더에서 수동 입력
+  SCHEDULE_AUTO // 일정현황 팀 호텔 배정으로 자동 표시
 }
 
 model TeamHotelStay {
-  id          String   @id @default(cuid())
+  id          String @id @default(cuid())
   workspaceId String
   teamId      String
 
@@ -641,12 +645,12 @@ model TeamHotelStay {
   roomCount     Int      @default(0)
   reservationNo String?
 
-  source      HotelStaySource  @default(MANUAL)
-  status      AssignmentStatus @default(TENTATIVE)
-  memo        String?
+  source HotelStaySource  @default(MANUAL)
+  status AssignmentStatus @default(TENTATIVE)
+  memo   String?
 
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
   team      TourTeam  @relation(fields: [teamId], references: [id], onDelete: Cascade)
@@ -658,27 +662,27 @@ model TeamHotelStay {
 }
 
 model TeamVehicleAssignment {
-  id          String   @id @default(cuid())
+  id          String @id @default(cuid())
   workspaceId String
   teamId      String
 
-  vehicleId             String?
-  driverId              String?
-  vehicleLabelSnapshot  String
+  vehicleId            String?
+  driverId             String?
+  vehicleLabelSnapshot String
 
-  startDate   DateTime
-  endDate     DateTime
+  startDate DateTime
+  endDate   DateTime
 
   // 차량비 (정책 1-A: VAT round) — 표시값은 packages/shared의 computeVat10/Included로 계산
-  totalWon         Int @default(0)
-  vatWon           Int @default(0)
-  totalWithVatWon  Int @default(0)
+  totalWon        Int @default(0)
+  vatWon          Int @default(0)
+  totalWithVatWon Int @default(0)
 
-  status      AssignmentStatus @default(TENTATIVE)
-  memo        String?
+  status AssignmentStatus @default(TENTATIVE)
+  memo   String?
 
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   workspace         Workspace          @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
   team              TourTeam           @relation(fields: [teamId], references: [id], onDelete: Cascade)
@@ -704,7 +708,7 @@ enum SettlementStatus {
 }
 
 model GuideSettlement {
-  id          String   @id @default(cuid())
+  id          String @id @default(cuid())
   workspaceId String
 
   teamId            String?
@@ -715,7 +719,7 @@ model GuideSettlement {
   periodMonth Int
 
   // 정책 2-A: DB는 원 단위 원값. 5천원 반올림은 표시 전용.
-  totalWon    Int
+  totalWon Int
 
   partnerId           String?
   partnerNameSnapshot String?
@@ -725,16 +729,16 @@ model GuideSettlement {
   confirmedById String?
   memo          String?
 
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
   createdById String?
   updatedById String?
   deletedAt   DateTime?
 
-  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
-  team      TourTeam? @relation(fields: [teamId], references: [id], onDelete: SetNull)
-  guide     Guide?    @relation(fields: [guideId], references: [id], onDelete: SetNull)
-  partner   Partner?  @relation(fields: [partnerId], references: [id], onDelete: SetNull)
+  workspace Workspace                @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  team      TourTeam?                @relation(fields: [teamId], references: [id], onDelete: SetNull)
+  guide     Guide?                   @relation(fields: [guideId], references: [id], onDelete: SetNull)
+  partner   Partner?                 @relation(fields: [partnerId], references: [id], onDelete: SetNull)
   payments  GuideSettlementPayment[]
 
   @@index([workspaceId, periodYear, periodMonth])
@@ -744,7 +748,7 @@ model GuideSettlement {
 }
 
 model GuideSettlementPayment {
-  id           String   @id @default(cuid())
+  id           String @id @default(cuid())
   workspaceId  String
   settlementId String
 
@@ -763,10 +767,10 @@ model GuideSettlementPayment {
 }
 
 model VehicleSettlement {
-  id                  String   @id @default(cuid())
+  id                  String  @id @default(cuid())
   workspaceId         String
   teamId              String?
-  vehicleAssignmentId String?  @unique
+  vehicleAssignmentId String? @unique
 
   vehicleId            String?
   vehicleLabelSnapshot String
@@ -789,11 +793,11 @@ model VehicleSettlement {
   updatedAt DateTime  @updatedAt
   deletedAt DateTime?
 
-  workspace         Workspace              @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
-  team              TourTeam?              @relation(fields: [teamId], references: [id], onDelete: SetNull)
-  vehicle           Vehicle?               @relation(fields: [vehicleId], references: [id], onDelete: SetNull)
-  partner           Partner?               @relation(fields: [partnerId], references: [id], onDelete: SetNull)
-  vehicleAssignment TeamVehicleAssignment? @relation(fields: [vehicleAssignmentId], references: [id], onDelete: SetNull)
+  workspace         Workspace                  @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  team              TourTeam?                  @relation(fields: [teamId], references: [id], onDelete: SetNull)
+  vehicle           Vehicle?                   @relation(fields: [vehicleId], references: [id], onDelete: SetNull)
+  partner           Partner?                   @relation(fields: [partnerId], references: [id], onDelete: SetNull)
+  vehicleAssignment TeamVehicleAssignment?     @relation(fields: [vehicleAssignmentId], references: [id], onDelete: SetNull)
   payments          VehicleSettlementPayment[]
 
   @@index([workspaceId, periodYear, periodMonth])
@@ -802,7 +806,7 @@ model VehicleSettlement {
 }
 
 model VehicleSettlementPayment {
-  id           String   @id @default(cuid())
+  id           String @id @default(cuid())
   workspaceId  String
   settlementId String
 
@@ -820,22 +824,22 @@ model VehicleSettlementPayment {
 }
 
 model ShoppingSale {
-  id          String   @id @default(cuid())
+  id          String  @id @default(cuid())
   workspaceId String
   teamId      String?
   guideId     String?
   centerId    String
 
-  visitDate   DateTime
-  paxCount    Int      @default(0)
-  buyerCount  Int      @default(0)
-  salesWon    Int      @default(0)
-  category    String?  // 인삼/적송/화장품/영지 등
-  memo        String?
+  visitDate  DateTime
+  paxCount   Int      @default(0)
+  buyerCount Int      @default(0)
+  salesWon   Int      @default(0)
+  category   String? // 인삼/적송/화장품/영지 등
+  memo       String?
 
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  deletedAt   DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
 
   workspace   Workspace            @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
   team        TourTeam?            @relation(fields: [teamId], references: [id], onDelete: SetNull)
@@ -849,7 +853,7 @@ model ShoppingSale {
 }
 
 model ShoppingCommission {
-  id             String   @id @default(cuid())
+  id             String  @id @default(cuid())
   workspaceId    String
   shoppingSaleId String?
   centerId       String
@@ -858,9 +862,9 @@ model ShoppingCommission {
   periodMonth Int
 
   // 정책 1-A: VAT round 통일 (기존 ERP에서는 trunc였음)
-  commissionWon   Int
-  vatWon          Int @default(0)
-  totalWithVatWon Int
+  commissionWon         Int
+  vatWon                Int    @default(0)
+  totalWithVatWon       Int
   // 이 매출에 실제 적용된 수수료율(%). 통계·감사용. null이면 사용자가 commissionWon을 직접 입력한 경우.
   commissionRatePercent Float?
 
@@ -895,14 +899,14 @@ enum LedgerEntryType {
   WITHDRAWAL
   CARD_USE
   CARD_PAYMENT
-  FX_OUT             // KRW → 외화
-  FX_IN              // 외화 → KRW
+  FX_OUT // KRW → 외화
+  FX_IN // 외화 → KRW
   BALANCE_ADJUSTMENT // 정책 6-A: override 컬럼 폐지 → 보정 라인으로
   OTHER
 }
 
 model FinanceWallet {
-  id          String   @id @default(cuid())
+  id          String @id @default(cuid())
   workspaceId String
 
   kind         WalletKind
@@ -919,7 +923,7 @@ model FinanceWallet {
   billingDay     Int?
   creditLimitWon Int?
 
-  active    Boolean  @default(true)
+  active Boolean @default(true)
 
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
@@ -933,13 +937,13 @@ model FinanceWallet {
 }
 
 model FinanceLedgerLine {
-  id          String   @id @default(cuid())
+  id          String @id @default(cuid())
   workspaceId String
   walletId    String
 
   entryType    LedgerEntryType
   lineDatetime DateTime
-  amountMinor  Int            // 부호 있는 정수 (입금/+, 출금/-)
+  amountMinor  Int // 부호 있는 정수 (입금/+, 출금/-)
   note         String?
 
   // 환전 출금/입금 페어링 (FX_OUT + FX_IN을 같은 그룹으로 묶음)
@@ -964,7 +968,7 @@ enum ReceivableStatus {
 }
 
 model Receivable {
-  id          String   @id @default(cuid())
+  id          String  @id @default(cuid())
   workspaceId String
   teamId      String?
 
@@ -989,9 +993,9 @@ model Receivable {
   updatedAt DateTime  @updatedAt
   deletedAt DateTime?
 
-  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
-  team      TourTeam? @relation(fields: [teamId], references: [id], onDelete: SetNull)
-  partner   Partner?  @relation(fields: [partnerId], references: [id], onDelete: SetNull)
+  workspace Workspace           @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  team      TourTeam?           @relation(fields: [teamId], references: [id], onDelete: SetNull)
+  partner   Partner?            @relation(fields: [partnerId], references: [id], onDelete: SetNull)
   payments  ReceivablePayment[]
 
   @@index([workspaceId, status, dueDate])
@@ -1001,7 +1005,7 @@ model Receivable {
 }
 
 model ReceivablePayment {
-  id           String   @id @default(cuid())
+  id           String @id @default(cuid())
   workspaceId  String
   receivableId String
 
@@ -1029,7 +1033,7 @@ enum ExpenseStatus {
 }
 
 model Expense {
-  id          String   @id @default(cuid())
+  id          String  @id @default(cuid())
   workspaceId String
   teamId      String?
 
@@ -1048,8 +1052,8 @@ model Expense {
   approvedById String?
   memo         String?
 
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
   createdById String?
   deletedAt   DateTime?
 
@@ -1062,7 +1066,7 @@ model Expense {
 }
 
 model ExpenseAttachment {
-  id          String   @id @default(cuid())
+  id          String @id @default(cuid())
   workspaceId String
   expenseId   String
 
@@ -1089,14 +1093,14 @@ model ExpenseAttachment {
 // ─────────────────────────────────────────────────────────────────────────
 
 model ExchangeRate {
-  id          String   @id @default(cuid())
-  workspaceId String?  // null = 전역 기본 (시스템 캐시), 워크스페이스 전용 환율도 가능
+  id          String  @id @default(cuid())
+  workspaceId String? // null = 전역 기본 (시스템 캐시), 워크스페이스 전용 환율도 가능
 
   baseCurrency  String   @default("USD")
   quoteCurrency String   @default("KRW")
   rate          Float
   effectiveDate DateTime
-  source        String?  // "manual" | "external_api" | "...".
+  source        String? // "manual" | "external_api" | "...".
 
   createdAt DateTime @default(now())
 
@@ -1174,8 +1178,8 @@ enum BackupExportStatus {
 }
 
 enum BackupExportTrigger {
-  MANUAL  // 사용자가 직접 클릭
-  CRON    // Phase 5: Vercel Cron 자동 일별
+  MANUAL // 사용자가 직접 클릭
+  CRON // Phase 5: Vercel Cron 자동 일별
 }
 
 enum SettlementPdfStatus {
@@ -1196,6 +1200,20 @@ enum MonthlyInsightStatus {
   GENERATING
   SUCCESS
   FAILED
+}
+
+enum HermesWorkflow {
+  MONTHLY_INSIGHT_AUTO
+  SCHEDULE_CHANGE_NOTIFY
+  RECEIVABLE_REMINDER_AUTO
+}
+
+enum HermesJobStatus {
+  PENDING
+  RUNNING
+  SUCCESS
+  FAILED
+  CANCELLED
 }
 
 // ─────────────────────────────────────────────────────────────────────────
@@ -1234,17 +1252,17 @@ model WorkspaceAiProviderConfig {
   role        AiProviderRole
 
   provider  IntegrationProvider
-  modelName String  // 자유 입력 (gpt-codex-auth-5.5, gemini-2.5-flash 등)
+  modelName String // 자유 입력 (gpt-codex-auth-5.5, gemini-2.5-flash 등)
 
   // Envelope encryption
   apiKeyCiphertext Bytes
   apiKeyIv         Bytes
   apiKeyAuthTag    Bytes
   encryptedDek     Bytes
-  dekKeyVersion    Int    @default(1) // 시스템 KEK 버전 (KEK 회전 대비)
+  dekKeyVersion    Int   @default(1) // 시스템 KEK 버전 (KEK 회전 대비)
 
   apiKeyMasked  String // "sk-***...****1234" 표시용
-  apiKeyVersion Int    @default(1) // 키 변경마다 +1 (AiJob snapshot용)
+  apiKeyVersion Int      @default(1) // 키 변경마다 +1 (AiJob snapshot용)
   keyUpdatedAt  DateTime
 
   createdAt DateTime @default(now())
@@ -1270,16 +1288,16 @@ model AiJob {
   roleSnapshot          AiProviderRole // PRIMARY로 시작했는지 FALLBACK이었는지
 
   // 작업 입력/출력 (큰 payload는 별도 저장 권장 — 여기는 메타만)
-  refType     String? // "Expense", "GuideSettlement", "Receivable" 등
-  refId       String?
+  refType       String? // "Expense", "GuideSettlement", "Receivable" 등
+  refId         String?
   inputSummary  String? // 짧은 요약 (감사용, 원문은 저장 X)
   outputSummary String?
 
-  status     AiJobStatus @default(QUEUED)
-  startedAt  DateTime?
-  finishedAt DateTime?
-  durationMs Int?
-  errorCode  String?
+  status       AiJobStatus @default(QUEUED)
+  startedAt    DateTime?
+  finishedAt   DateTime?
+  durationMs   Int?
+  errorCode    String?
   errorMessage String?
 
   // AI 크레딧 차감 추적 (시스템 크레딧 모드 전용)
@@ -1297,18 +1315,18 @@ model AiJob {
 /// 영수증 사진 1장 OCR 작업.
 /// AiJob보다 원본 이미지/추출 JSON/Expense 연결 필드가 많아 별도 모델로 분리한다.
 model ReceiptOcrJob {
-  id          String              @id @default(cuid())
+  id          String    @id @default(cuid())
   workspaceId String
-  workspace   Workspace           @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
 
   imageMimeType String
-  imageBase64   String            @db.Text
+  imageBase64   String @db.Text
   imageBytes    Int
 
   provider   IntegrationProvider
   modelName  String
   keyVersion Int
-  status     ReceiptOcrJobStatus  @default(PENDING)
+  status     ReceiptOcrJobStatus @default(PENDING)
 
   extractedData Json?
   errorCode     String?
@@ -1317,9 +1335,9 @@ model ReceiptOcrJob {
   expenseId     String?
 
   createdById String
-  createdBy   User                @relation(fields: [createdById], references: [id])
-  createdAt   DateTime            @default(now())
-  updatedAt   DateTime            @updatedAt
+  createdBy   User     @relation(fields: [createdById], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
   @@index([workspaceId, status])
   @@index([workspaceId, createdAt(sort: Desc)])
@@ -1333,18 +1351,18 @@ model ReceiptOcrJob {
 model WorkspaceMessagingSettings {
   workspaceId String @id
 
-  enabled  Boolean @default(false)
+  enabled  Boolean           @default(false)
   provider MessagingProvider @default(KAKAO_ALIMTALK)
 
   // 발신 프로필 (암호화 저장)
-  senderProfileKeyCiphertext Bytes?
-  senderProfileKeyIv         Bytes?
-  senderProfileKeyAuthTag    Bytes?
-  senderProfileKeyEncryptedDek Bytes?
-  senderProfileKeyDekKeyVersion Int @default(1)
-  senderProfileKeyMasked     String?
-  senderPhone                String?
-  senderName                 String?
+  senderProfileKeyCiphertext    Bytes?
+  senderProfileKeyIv            Bytes?
+  senderProfileKeyAuthTag       Bytes?
+  senderProfileKeyEncryptedDek  Bytes?
+  senderProfileKeyDekKeyVersion Int     @default(1)
+  senderProfileKeyMasked        String?
+  senderPhone                   String?
+  senderName                    String?
 
   templateSyncStatus MessagingTemplateSyncStatus @default(DISABLED)
   templateSyncedAt   DateTime?
@@ -1400,9 +1418,9 @@ model BackupExportJob {
   scopeAudit       Boolean @default(false) // OWNER만 선택 가능
 
   // 결과물
-  fileName       String?
-  fileSizeBytes  Int?
-  storageUrl     String? // Vercel Blob URL 또는 signed URL
+  fileName          String?
+  fileSizeBytes     Int?
+  storageUrl        String? // Vercel Blob URL 또는 signed URL
   downloadExpiresAt DateTime? // 만료 시간 (보안)
 
   startedAt    DateTime?
@@ -1421,12 +1439,12 @@ model BackupExportJob {
 }
 
 model SettlementPdfJob {
-  id          String              @id @default(cuid())
+  id          String    @id @default(cuid())
   workspaceId String
-  workspace   Workspace           @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
 
   type    SettlementPdfType
-  status  SettlementPdfStatus     @default(GENERATING)
+  status  SettlementPdfStatus @default(GENERATING)
   guideId String?
 
   periodStart DateTime
@@ -1439,8 +1457,8 @@ model SettlementPdfJob {
   latencyMs     Int?
 
   createdById String
-  createdBy   User                @relation(fields: [createdById], references: [id])
-  createdAt   DateTime            @default(now())
+  createdBy   User     @relation(fields: [createdById], references: [id])
+  createdAt   DateTime @default(now())
 
   @@index([workspaceId, type, createdAt(sort: Desc)])
   @@index([workspaceId, guideId])
@@ -1448,16 +1466,16 @@ model SettlementPdfJob {
 }
 
 model MonthlyInsight {
-  id          String               @id @default(cuid())
+  id          String    @id @default(cuid())
   workspaceId String
-  workspace   Workspace            @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
 
   periodYear  Int
   periodMonth Int
   status      MonthlyInsightStatus @default(GENERATING)
 
   statisticsJson  Json?
-  summaryMarkdown String?          @db.Text
+  summaryMarkdown String? @db.Text
 
   provider   IntegrationProvider?
   modelName  String?
@@ -1468,10 +1486,69 @@ model MonthlyInsight {
   latencyMs    Int?
 
   createdById String
-  createdBy   User                 @relation(fields: [createdById], references: [id])
-  createdAt   DateTime             @default(now())
+  createdBy   User     @relation(fields: [createdById], references: [id])
+  createdAt   DateTime @default(now())
 
   @@index([workspaceId, periodYear, periodMonth])
   @@index([workspaceId, createdAt(sort: Desc)])
   @@map("monthly_insights")
+}
+
+model HermesJob {
+  id          String     @id @default(cuid())
+  workspaceId String?
+  workspace   Workspace? @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  workflow HermesWorkflow
+  status   HermesJobStatus @default(PENDING)
+
+  scheduledAt      DateTime
+  startedAt        DateTime?
+  completedAt      DateTime?
+  retryCount       Int       @default(0)
+  recordsProcessed Int       @default(0)
+
+  errorCode    String?
+  errorMessage String?
+  metadata     Json?
+  createdAt    DateTime @default(now())
+
+  @@index([workspaceId, workflow, scheduledAt(sort: Desc)])
+  @@index([status, scheduledAt])
+  @@map("hermes_jobs")
+}
+
+model WorkspaceAutomationSettings {
+  id          String    @id @default(cuid())
+  workspaceId String    @unique
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  monthlyInsightAutoEnabled     Boolean @default(false)
+  scheduleChangeNotifyEnabled   Boolean @default(false)
+  receivableReminderAutoEnabled Boolean @default(false)
+
+  updatedById String?
+  updatedAt   DateTime @updatedAt
+  createdAt   DateTime @default(now())
+
+  @@map("workspace_automation_settings")
+}
+
+model ScheduleChangeLog {
+  id          String    @id @default(cuid())
+  workspaceId String
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  scheduleId String
+  changeType String
+  beforeData Json?
+  afterData  Json?
+
+  changedById String
+  changedBy   User     @relation(fields: [changedById], references: [id])
+  changedAt   DateTime @default(now())
+
+  @@index([workspaceId, changedAt(sort: Desc)])
+  @@index([scheduleId])
+  @@map("schedule_change_logs")
 }
