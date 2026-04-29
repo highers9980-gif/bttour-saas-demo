@@ -54,7 +54,7 @@ export function BottomTabBar({
     <nav
       aria-label="모바일 주요 메뉴"
       className={cn(
-        'fixed bottom-0 left-0 right-0 z-30 h-16 border-t border-slate-200 bg-white pb-[env(safe-area-inset-bottom)] shadow-soft md:hidden',
+        'fixed bottom-0 left-0 right-0 z-30 h-[calc(64px+env(safe-area-inset-bottom))] border-t border-slate-200 bg-white pb-[env(safe-area-inset-bottom)] shadow-soft md:hidden',
         className,
       )}
     >
