@@ -12,7 +12,7 @@ import {
   todayIso,
 } from '@bttour/ui';
 import { canMutateMaster } from '@bttour/shared';
-import { prisma } from '@bttour/db';
+import { prisma, type Prisma } from '@bttour/db';
 import { getTranslations } from 'next-intl/server';
 import Link from 'next/link';
 import { revalidatePath } from 'next/cache';
@@ -116,6 +116,57 @@ function revalidateOps(slug: string) {
   revalidatePath(`/w/${slug}/hotel-calendar`);
 }
 
+function teamSnapshot(team: {
+  id: string;
+  teamNo: number;
+  startDate: Date;
+  endDate: Date;
+  guideAssignments?: Array<{ guideId?: string | null; guideNameSnapshot?: string | null }>;
+}) {
+  return {
+    id: team.id,
+    teamNo: team.teamNo,
+    startDate: team.startDate.toISOString(),
+    endDate: team.endDate.toISOString(),
+    guideId: team.guideAssignments?.[0]?.guideId ?? null,
+    guideName: team.guideAssignments?.[0]?.guideNameSnapshot ?? null,
+  };
+}
+
+async function recordScheduleChange({
+  afterData,
+  beforeData,
+  changedById,
+  changeType,
+  scheduleId,
+  workspaceId,
+}: {
+  afterData?: Prisma.InputJsonObject;
+  beforeData?: Prisma.InputJsonObject;
+  changedById: string;
+  changeType: 'CREATED' | 'UPDATED' | 'DELETED' | 'TIME_CHANGED' | 'GUIDE_CHANGED';
+  scheduleId: string;
+  workspaceId: string;
+}) {
+  const settings = await prisma.workspaceAutomationSettings.findUnique({
+    where: { workspaceId },
+    select: { scheduleChangeNotifyEnabled: true },
+  });
+
+  if (!settings?.scheduleChangeNotifyEnabled) return;
+
+  await prisma.scheduleChangeLog.create({
+    data: {
+      workspaceId,
+      scheduleId,
+      changeType,
+      ...(beforeData ? { beforeData } : {}),
+      ...(afterData ? { afterData } : {}),
+      changedById,
+    },
+  });
+}
+
 async function createTourTeam(formData: FormData) {
   'use server';
   const slug = String(formData.get('workspaceSlug') ?? '');
@@ -127,7 +178,7 @@ async function createTourTeam(formData: FormData) {
       })
     : null;
 
-  await prisma.tourTeam.create({
+  const team = await prisma.tourTeam.create({
     data: {
       workspaceId: workspace.id,
       year: numberFromForm(formData, 'year'),
@@ -151,18 +202,33 @@ async function createTourTeam(formData: FormData) {
     },
   });
 
+  await recordScheduleChange({
+    workspaceId: workspace.id,
+    scheduleId: team.id,
+    changeType: 'CREATED',
+    changedById: userId,
+    afterData: teamSnapshot(team),
+  });
+
   revalidateOps(slug);
 }
 
 async function assignGuide(formData: FormData) {
   'use server';
   const slug = String(formData.get('workspaceSlug') ?? '');
-  const { workspace } = await assertWorkspace(slug, 'MANAGER');
+  const { workspace, userId } = await assertWorkspace(slug, 'MANAGER');
   const teamId = String(formData.get('teamId') ?? '');
   const guideId = optionalString(formData, 'guideId');
   const [team, guide] = await Promise.all([
     prisma.tourTeam.findFirst({
       where: { id: teamId, workspaceId: workspace.id, deletedAt: null },
+      include: {
+        guideAssignments: {
+          where: { status: { not: 'CANCELLED' } },
+          orderBy: { createdAt: 'asc' },
+          take: 1,
+        },
+      },
     }),
     guideId
       ? prisma.guide.findFirst({
@@ -186,6 +252,19 @@ async function assignGuide(formData: FormData) {
     },
   });
 
+  await recordScheduleChange({
+    workspaceId: workspace.id,
+    scheduleId: team.id,
+    changeType: 'GUIDE_CHANGED',
+    changedById: userId,
+    beforeData: teamSnapshot(team),
+    afterData: {
+      ...teamSnapshot(team),
+      guideId: guide.id,
+      guideName: guide.name,
+    },
+  });
+
   revalidateOps(slug);
 }
 
@@ -193,10 +272,29 @@ async function cancelTourTeam(formData: FormData) {
   'use server';
   const slug = String(formData.get('workspaceSlug') ?? '');
   const { workspace, userId } = await assertWorkspace(slug, 'MANAGER');
+  const team = await prisma.tourTeam.findFirst({
+    where: { id: String(formData.get('teamId') ?? ''), workspaceId: workspace.id },
+    include: {
+      guideAssignments: {
+        where: { status: { not: 'CANCELLED' } },
+        orderBy: { createdAt: 'asc' },
+        take: 1,
+      },
+    },
+  });
   await prisma.tourTeam.updateMany({
     where: { id: String(formData.get('teamId') ?? ''), workspaceId: workspace.id },
     data: { status: 'CANCELLED', deletedAt: new Date(), updatedById: userId },
   });
+  if (team) {
+    await recordScheduleChange({
+      workspaceId: workspace.id,
+      scheduleId: team.id,
+      changeType: 'DELETED',
+      changedById: userId,
+      beforeData: teamSnapshot(team),
+    });
+  }
   revalidateOps(slug);
 }
 
