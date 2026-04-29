@@ -62,12 +62,14 @@
     "receivables": "Receivables",
     "finance": "Bank & Card",
     "expense": "Expenses",
-    "revenue": "Revenue",
-    "statistics": "Analytics",
-    "guide_recommend": "Guide Recommend",
+    "revenue": "Revenue Dashboard",
+    "statistics": "Integrated Analytics",
+    "guide_recommend": "Guide Recommendation",
     "user_management": "User Mgmt",
     "settings": "Workspace Settings",
-    "billing": "Billing & Plan"
+    "billing": "Billing & Plan",
+    "monthly_insight": "Monthly Insight",
+    "hermes_supervisor": "Hermes Supervisor"
   },
   "auth": {
     "login": {
@@ -147,7 +149,7 @@
       "avg_time": "Avg processing time"
     },
     "queue": {
-      "title": "KakaoTalk Queue",
+      "title": "KakaoTalk Alimtalk Queue",
       "settlement_notice": "Settlement Notice",
       "receivable_reminder": "Receivable Reminder",
       "hotel_confirmed": "Hotel Booking Confirmed"
@@ -195,9 +197,9 @@
   "settlement": {
     "guide": {
       "title": "Guide Settlement",
-      "bulk_kakao": "Bulk KakaoTalk",
-      "download_pdf": "Download Statement PDF",
-      "review_statement": "Review Statements →",
+      "bulk_kakao": "Bulk KakaoTalk Alimtalk",
+      "download_pdf": "Download Settlement Statement PDF",
+      "review_statement": "Review Settlement Statements →",
       "unpaid": "Unpaid",
       "paid": "Paid"
     },
@@ -216,10 +218,10 @@
       "recent_sales": "Recent Shopping Sales"
     },
     "receivable": {
-      "title": "Receivables",
+      "title": "Receivable Management",
       "by_partner": "Receivables by Partner",
       "add": "Add Receivable",
-      "bulk_reminder": "Bulk Reminder",
+      "bulk_reminder": "Bulk Receivable Reminder",
       "review_message": "Review Messages →"
     }
   },
@@ -235,7 +237,7 @@
     "exchange_history": "Exchange History"
   },
   "expense": {
-    "title": "Expenses",
+    "title": "Expense Processing",
     "ocr_processing": "Hermes AI OCR Processing",
     "pending_approval": "Awaiting Approval",
     "bulk_approve": "Bulk Approve",

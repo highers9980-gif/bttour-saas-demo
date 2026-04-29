@@ -67,7 +67,9 @@
     "guide_recommend": "가이드 추천",
     "user_management": "사용자 관리",
     "settings": "워크스페이스 설정",
-    "billing": "결제·플랜"
+    "billing": "결제·플랜",
+    "monthly_insight": "월말 인사이트",
+    "hermes_supervisor": "Hermes Supervisor"
   },
   "auth": {
     "login": {
