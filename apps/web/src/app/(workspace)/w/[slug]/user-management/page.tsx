@@ -1,4 +1,4 @@
-import { Badge, Button, Card, DataTable, EmptyState, Field, TextField } from '@bttour/ui';
+import { Badge, Button, Card, DataTable, EmptyState, Field, MobileCardList, TextField } from '@bttour/ui';
 import {
   ROLES,
   buildPermissionMatrix,
@@ -167,12 +167,59 @@ export default async function UserManagementPage({ params }: { params: { slug: s
         }}
         activePanel={
           <Card padding="none" className="overflow-hidden">
-            <DataTable
-              rows={activeMembers}
-              columns={activeColumns}
-              rowKey={(member) => member.id}
-              empty={<EmptyState title={t('common.empty')} variant="inline" />}
-            />
+            <div className="hidden md:block">
+              <DataTable
+                rows={activeMembers}
+                columns={activeColumns}
+                rowKey={(member) => member.id}
+                empty={<EmptyState title={t('common.empty')} variant="inline" />}
+              />
+            </div>
+            <div className="p-4 md:hidden">
+              <MobileCardList
+                rows={activeMembers}
+                rowKey={(member) => member.id}
+                empty={<EmptyState title={t('common.empty')} variant="inline" />}
+                renderCard={(member) => {
+                  const nextRole: Role = member.role === 'VIEWER' ? 'MANAGER' : 'VIEWER';
+                  const allowed = canChangeRole({
+                    actor: role,
+                    actorIsSelf: false,
+                    targetCurrent: member.role,
+                    targetNewRole: nextRole,
+                  });
+
+                  return (
+                    <div className="space-y-3">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex min-w-0 items-center gap-3">
+                          <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-orange-500 text-sm font-bold text-white">
+                            {member.avatar}
+                          </div>
+                          <div className="min-w-0">
+                            <div className="truncate font-bold text-navy-900">{member.name}</div>
+                            <div className="truncate text-xs text-slate-500">{member.email}</div>
+                          </div>
+                        </div>
+                        <StatusBadge status={member.status} />
+                      </div>
+                      <div className="flex items-center justify-between text-sm">
+                        <Badge tone={roleTone[member.role]}>{member.role}</Badge>
+                        <span className="text-xs text-slate-500">{member.lastLogin}</span>
+                      </div>
+                      <form action={changeRoleAction} className="flex justify-end">
+                        <input type="hidden" name="workspaceSlug" value={params.slug} />
+                        <input type="hidden" name="memberId" value={member.id} />
+                        <input type="hidden" name="targetNewRole" value={nextRole} />
+                        <Button type="submit" size="sm" variant="ghost" disabled={!allowed}>
+                          {t('admin.users.change_role')}
+                        </Button>
+                      </form>
+                    </div>
+                  );
+                }}
+              />
+            </div>
           </Card>
         }
         pendingPanel={

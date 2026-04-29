@@ -1,4 +1,4 @@
-import { Badge, Button, Card, DataTable, EmptyState, Field, KpiCard, TextField } from '@bttour/ui';
+import { Badge, Button, Card, DataTable, EmptyState, Field, KpiCard, MobileCardList, TextField } from '@bttour/ui';
 import { prisma, type Prisma } from '@bttour/db';
 import { revalidatePath } from 'next/cache';
 import { assertWorkspace, requireWorkspace } from '@/lib/workspace-guard';
@@ -547,20 +547,37 @@ export default async function AiSettingsPage({ params }: { params: { slug: strin
         <div className="border-b border-slate-100 px-5 py-4">
           <h2 className="font-bold text-navy-900">AI 설정 감사 로그</h2>
         </div>
-        <DataTable
-          rows={auditRows}
-          rowKey={(row) => row.id}
-          empty={<EmptyState title="AI 설정 변경 기록이 없습니다" variant="inline" />}
-          columns={[
-            { key: 'action', header: '액션', cell: (row: AuditRow) => row.action },
-            {
-              key: 'actorUserId',
-              header: '사용자',
-              cell: (row: AuditRow) => row.actorUserId ?? '-',
-            },
-            { key: 'createdAt', header: '시간', cell: (row: AuditRow) => dateLabel(row.createdAt) },
-          ]}
-        />
+        <div className="hidden md:block">
+          <DataTable
+            rows={auditRows}
+            rowKey={(row) => row.id}
+            empty={<EmptyState title="AI 설정 변경 기록이 없습니다" variant="inline" />}
+            columns={[
+              { key: 'action', header: '액션', cell: (row: AuditRow) => row.action },
+              {
+                key: 'actorUserId',
+                header: '사용자',
+                cell: (row: AuditRow) => row.actorUserId ?? '-',
+              },
+              { key: 'createdAt', header: '시간', cell: (row: AuditRow) => dateLabel(row.createdAt) },
+            ]}
+          />
+        </div>
+        <div className="p-4 md:hidden">
+          <MobileCardList
+            rows={auditRows}
+            rowKey={(row) => row.id}
+            empty={<EmptyState title="AI 설정 변경 기록이 없습니다" variant="inline" />}
+            renderCard={(row) => (
+              <div className="space-y-1">
+                <div className="font-bold text-navy-900">{row.action}</div>
+                <div className="text-xs text-slate-500">
+                  {row.actorUserId ?? '-'} · {dateLabel(row.createdAt)}
+                </div>
+              </div>
+            )}
+          />
+        </div>
       </Card>
     </div>
   );
