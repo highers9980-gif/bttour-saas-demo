@@ -39,6 +39,7 @@ model User {
   memberships Membership[]
   invitesSent Invitation[] @relation("InvitedBy")
   receiptOcrJobs ReceiptOcrJob[]
+  settlementPdfJobs SettlementPdfJob[]
 
   @@map("users")
 }
@@ -146,6 +147,7 @@ model Workspace {
   backupSettings         WorkspaceBackupSettings?
   backupExports          BackupExportJob[]
   receiptOcrJobs         ReceiptOcrJob[]
+  settlementPdfJobs      SettlementPdfJob[]
 
   @@index([deletedAt])
   @@map("workspaces")
@@ -1174,6 +1176,20 @@ enum BackupExportTrigger {
   CRON    // Phase 5: Vercel Cron 자동 일별
 }
 
+enum SettlementPdfStatus {
+  GENERATING
+  SUCCESS
+  FAILED
+}
+
+enum SettlementPdfType {
+  GUIDE
+  PARTNER
+  VEHICLE
+  SHOPPING
+  RECEIVABLE
+}
+
 // ─────────────────────────────────────────────────────────────────────────
 // AI 통합 설정
 // ─────────────────────────────────────────────────────────────────────────
@@ -1394,4 +1410,31 @@ model BackupExportJob {
   @@index([workspaceId, status, createdAt])
   @@index([workspaceId, trigger, createdAt])
   @@map("backup_export_jobs")
+}
+
+model SettlementPdfJob {
+  id          String              @id @default(cuid())
+  workspaceId String
+  workspace   Workspace           @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  type    SettlementPdfType
+  status  SettlementPdfStatus     @default(GENERATING)
+  guideId String?
+
+  periodStart DateTime
+  periodEnd   DateTime
+
+  fileName      String
+  fileSizeBytes Int?
+  pageCount     Int?
+  errorMessage  String?
+  latencyMs     Int?
+
+  createdById String
+  createdBy   User                @relation(fields: [createdById], references: [id])
+  createdAt   DateTime            @default(now())
+
+  @@index([workspaceId, type, createdAt(sort: Desc)])
+  @@index([workspaceId, guideId])
+  @@map("settlement_pdf_jobs")
 }
