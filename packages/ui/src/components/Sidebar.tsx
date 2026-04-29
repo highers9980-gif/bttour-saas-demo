@@ -63,7 +63,7 @@ export function Sidebar({
       className={cn(
         'fixed inset-y-0 left-0 z-40 w-64 bg-navy-900 text-white flex flex-col h-[100dvh] transform transition-transform duration-200 ease-out',
         open ? 'translate-x-0' : '-translate-x-full',
-        'md:static md:translate-x-0 md:h-screen md:shrink-0',
+        'lg:static lg:translate-x-0 lg:h-screen lg:shrink-0',
         className,
       )}
     >

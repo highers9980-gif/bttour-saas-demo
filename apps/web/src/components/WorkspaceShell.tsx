@@ -105,7 +105,7 @@ export function WorkspaceShell({
         <button
           type="button"
           aria-label="메뉴 닫기"
-          className="fixed inset-0 z-30 bg-slate-950/40 md:hidden"
+          className="fixed inset-0 z-30 bg-slate-950/40 lg:hidden"
           onClick={() => setSidebarOpen(false)}
         />
       )}
@@ -146,7 +146,7 @@ export function WorkspaceShell({
             </>
           }
         />
-        <div className="flex-1 overflow-y-auto bg-slate-100 p-4 pb-[88px] scroll-thin md:pb-8 md:p-8">{children}</div>
+        <div className="flex-1 overflow-y-auto bg-slate-100 p-4 pb-[88px] scroll-thin lg:p-8 lg:pb-8">{children}</div>
       </div>
       <BottomTabBar
         LinkComponent={AppLink}

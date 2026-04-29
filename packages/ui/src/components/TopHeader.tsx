@@ -26,11 +26,11 @@ export function TopHeader({
   return (
     <header
       className={cn(
-        'bg-white border-b border-slate-200 h-16 px-4 md:px-8',
+        'bg-white border-b border-slate-200 h-16 px-4 lg:px-8',
         className,
       )}
     >
-      <div className="flex h-full items-center justify-between gap-3 md:hidden">
+      <div className="flex h-full items-center justify-between gap-3 lg:hidden">
         <button
           type="button"
           onClick={onMenuClick}
@@ -62,7 +62,7 @@ export function TopHeader({
           </div>
         )}
       </div>
-      <div className="hidden h-full items-center justify-between gap-4 md:flex">
+      <div className="hidden h-full items-center justify-between gap-4 lg:flex">
         <div className="min-w-0">
           <h1 className="truncate text-lg font-bold text-navy-900">{title}</h1>
           {subtitle && (
