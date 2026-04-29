@@ -35,7 +35,7 @@ export function TopHeader({
           type="button"
           onClick={onMenuClick}
           aria-label="메뉴 열기"
-          className="grid h-10 w-10 shrink-0 place-items-center rounded-lg border border-slate-200 text-navy-900"
+          className="hidden h-10 w-10 shrink-0 place-items-center rounded-lg border border-slate-200 text-navy-900 md:grid"
         >
           <span className="flex flex-col gap-1.5" aria-hidden="true">
             <span className="block h-0.5 w-5 rounded-full bg-current" />
