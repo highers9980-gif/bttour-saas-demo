@@ -4,18 +4,18 @@
 
 ## Phase 0 완료 항목
 
-| 영역 | 결과물 | 위치 |
-|---|---|---|
-| 모노레포 | apps/(web,api), packages/(ui,db,shared), docs/ | `bttour-saas/` |
-| 디자인 토큰 | navy/orange/Pretendard/shadow/animation/grad/dot-grid | `packages/ui/src/tailwind-preset.ts` |
-| 공통 컴포넌트 | Button, Card, KpiCard, Badge, MonthNavigator, OpsHeader, TopHeader, Sidebar, WorkspaceSwitcher | `packages/ui/src/components/` |
-| Prisma 스키마 | User, Workspace, Membership, Invitation, Plan, Subscription, AiCreditLedger, AuditLog | `packages/db/prisma/schema.prisma` |
-| 정산 함수 | formatWonDisplay, computeVat10, computeSettlementBalance, computePerPaxMinusUsd, computeShoppingCommissionTotals, computeReceivableBalance, computeWalletBalance, computeCardRemainingLimit (Codex 명세 반영) | `packages/shared/src/finance/` |
-| Next.js 골격 | App Router + (marketing)/(auth)/(workspace) 그룹 + middleware | `apps/web/src/` |
-| 워크스페이스 셸 | Sidebar 13개 메뉴 + TopHeader + 인증 게이트 | `apps/web/src/components/WorkspaceShell.tsx` + `app/(workspace)/w/[slug]/layout.tsx` |
-| 인증 | NextAuth v5 + Prisma adapter + 가입 트랜잭션 | `apps/web/src/lib/auth.ts`, `app/(auth)/signup/page.tsx` |
-| NestJS API | 스켈레톤 + /health | `apps/api/src/` |
-| 시드 | Plan 카탈로그 4건 (STARTER/PRO/PRO_AI/BUSINESS_AI) | `packages/db/prisma/seed.ts` |
+| 영역            | 결과물                                                                                                                                                                                                        | 위치                                                                                 |
+| --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------ |
+| 모노레포        | apps/(web,api), packages/(ui,db,shared), docs/                                                                                                                                                                | `bttour-saas/`                                                                       |
+| 디자인 토큰     | navy/orange/Pretendard/shadow/animation/grad/dot-grid                                                                                                                                                         | `packages/ui/src/tailwind-preset.ts`                                                 |
+| 공통 컴포넌트   | Button, Card, KpiCard, Badge, MonthNavigator, OpsHeader, TopHeader, Sidebar, WorkspaceSwitcher                                                                                                                | `packages/ui/src/components/`                                                        |
+| Prisma 스키마   | User, Workspace, Membership, Invitation, Plan, Subscription, AiCreditLedger, AuditLog                                                                                                                         | `packages/db/prisma/schema.prisma`                                                   |
+| 정산 함수       | formatWonDisplay, computeVat10, computeSettlementBalance, computePerPaxMinusUsd, computeShoppingCommissionTotals, computeReceivableBalance, computeWalletBalance, computeCardRemainingLimit (Codex 명세 반영) | `packages/shared/src/finance/`                                                       |
+| Next.js 골격    | App Router + (marketing)/(auth)/(workspace) 그룹 + middleware                                                                                                                                                 | `apps/web/src/`                                                                      |
+| 워크스페이스 셸 | Sidebar 13개 메뉴 + TopHeader + 인증 게이트                                                                                                                                                                   | `apps/web/src/components/WorkspaceShell.tsx` + `app/(workspace)/w/[slug]/layout.tsx` |
+| 인증            | NextAuth v5 + Prisma adapter + 가입 트랜잭션                                                                                                                                                                  | `apps/web/src/lib/auth.ts`, `app/(auth)/signup/page.tsx`                             |
+| NestJS API      | 스켈레톤 + /health                                                                                                                                                                                            | `apps/api/src/`                                                                      |
+| 시드            | Plan 카탈로그 4건 (STARTER/PRO/PRO_AI/BUSINESS_AI)                                                                                                                                                            | `packages/db/prisma/seed.ts`                                                         |
 
 ## Phase 1 시작 전 사용자가 결정해야 할 5가지
 
@@ -41,6 +41,7 @@
 ### 작업 분담
 
 #### Codex 담당 (페이지 변환 양산)
+
 - 페이지별 React 컴포넌트 작성 (한 페이지 한 PR)
 - 각 페이지의 컴포넌트 트리·props는 Codex의 `04-priority-page-component-tree.md` 분석 명세 따름
 - i18n 키는 `05-i18n-dictionary-draft.md`에서 추출
@@ -49,6 +50,7 @@
 - 새 공통 컴포넌트가 필요하면 PR에서 알리고 Claude가 `@bttour/ui`로 승격
 
 #### Claude 담당 (검토 + 보완)
+
 - Codex PR 리뷰 (디자인 일관성, RBAC 가드, workspaceId 누락 등)
 - 새 공통 컴포넌트(`DataTable`, `MobileCardList`, `ViewToggle`, `Modal`, `Toast`, `EmptyState`, `LanguageSwitcher`) 본승급
 - next-intl 설정 + `apps/web/src/messages/` 구성
@@ -82,6 +84,7 @@ npm run dev
 - `apps/web/src/app/page.tsx`는 임시 랜딩. Phase 1에서 `(marketing)/page.tsx`(도면 index.html 변환본)로 대체.
 - 도면의 `workspace settings`, `billing` 페이지는 Phase 1에서 라우트만 만들고 "준비 중" 상태로 둠 (Phase 3 결제 도입 시 본구현).
 - 모바일 시안은 도면에 미설계 → Phase 1에서 페이지별로 명시.
+- Phase 4G Hermes Cron 운영 시 Vercel 환경변수 `CRON_SECRET`를 Production/Preview에 Sensitive 값으로 등록한다. 32자 이상 랜덤 문자열을 권장.
 
 ## 참고 문서
 
