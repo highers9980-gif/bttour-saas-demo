@@ -16,6 +16,11 @@ export {
   type SidebarGroup,
 } from './components/Sidebar';
 export {
+  BottomTabBar,
+  type BottomTabBarProps,
+  type BottomTabItem,
+} from './components/BottomTabBar';
+export {
   WorkspaceSwitcher,
   type WorkspaceSwitcherProps,
   type WorkspaceOption,
