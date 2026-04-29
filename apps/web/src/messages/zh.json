@@ -59,15 +59,17 @@
     "guide_settlement": "导游结算",
     "vehicle": "车辆费",
     "shopping_fee": "购物佣金",
-    "receivables": "应收款",
+    "receivables": "应收账款",
     "finance": "银行·卡",
     "expense": "费用处理",
-    "revenue": "营收",
+    "revenue": "营收仪表板",
     "statistics": "综合统计",
     "guide_recommend": "导游推荐",
     "user_management": "用户管理",
     "settings": "工作区设置",
-    "billing": "付款·套餐"
+    "billing": "付款·套餐",
+    "monthly_insight": "月末洞察",
+    "hermes_supervisor": "Hermes Supervisor"
   },
   "auth": {
     "login": {
@@ -133,7 +135,7 @@
       "month_revenue": "本月收入",
       "month_profit": "本月利润",
       "active_teams": "进行中团队",
-      "receivables_balance": "应收余额",
+      "receivables_balance": "应收账款余额",
       "over_30_days": "超过30天"
     },
     "weekly_teams": "本周团队",
@@ -147,9 +149,9 @@
       "avg_time": "平均处理时间"
     },
     "queue": {
-      "title": "KakaoTalk 队列",
+      "title": "KakaoTalk 알림톡 队列",
       "settlement_notice": "结算通知",
-      "receivable_reminder": "应收催款",
+      "receivable_reminder": "应收账款催收",
       "hotel_confirmed": "酒店预订确认"
     },
     "quick": {
@@ -216,10 +218,10 @@
       "recent_sales": "最近购物销售"
     },
     "receivable": {
-      "title": "应收款管理",
-      "by_partner": "按客户应收款",
-      "add": "添加应收",
-      "bulk_reminder": "批量催收",
+      "title": "应收账款管理",
+      "by_partner": "按合作伙伴应收账款",
+      "add": "添加应收账款",
+      "bulk_reminder": "批量催收 알림톡",
       "review_message": "查看消息 →"
     }
   },
@@ -312,7 +314,7 @@
       "guide_settlement": "导游结算自动化",
       "shopping": "购物佣金分配",
       "hotel_vehicle": "酒店日历 + 车辆费",
-      "receivable_finance": "应收 + 银行/卡",
+      "receivable_finance": "应收账款 + 银行/卡",
       "revenue": "营收·利润仪表板"
     },
     "pricing": {
