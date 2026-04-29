@@ -1,0 +1,305 @@
+import { prisma, Prisma } from '@bttour/db';
+import { generateMonthlyInsightCore, periodLabel } from '@/lib/insights/generate';
+
+interface SupervisorJobResult {
+  workflow: 'MONTHLY_INSIGHT_AUTO';
+  workspaceId: string;
+  status: 'SUCCESS' | 'FAILED' | 'CANCELLED';
+  jobId?: string;
+  insightId?: string;
+  errorMessage?: string;
+}
+
+interface KstParts {
+  year: number;
+  month: number;
+  day: number;
+  hour: number;
+  minute: number;
+}
+
+function kstParts(now: Date): KstParts {
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'Asia/Seoul',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    hourCycle: 'h23',
+  }).formatToParts(now);
+  const value = (type: Intl.DateTimeFormatPartTypes) =>
+    Number(parts.find((part) => part.type === type)?.value ?? 0);
+
+  return {
+    year: value('year'),
+    month: value('month'),
+    day: value('day'),
+    hour: value('hour'),
+    minute: value('minute'),
+  };
+}
+
+function previousMonth({ month, year }: Pick<KstParts, 'month' | 'year'>) {
+  if (month === 1) return { periodYear: year - 1, periodMonth: 12 };
+  return { periodYear: year, periodMonth: month - 1 };
+}
+
+function shouldRunMonthlyInsightAuto(now: Date) {
+  const parts = kstParts(now);
+  return parts.day === 1 && parts.hour === 5 && parts.minute <= 30;
+}
+
+async function writeHermesAudit({
+  action,
+  metadata,
+  targetId,
+  workspaceId,
+}: {
+  action: 'hermes.cron.fired' | 'hermes.workflow.completed' | 'hermes.workflow.failed';
+  metadata?: Record<string, unknown>;
+  targetId?: string;
+  workspaceId?: string | null;
+}) {
+  await prisma.auditLog.create({
+    data: {
+      workspaceId,
+      actorUserId: null,
+      action,
+      targetType: targetId ? 'HermesJob' : 'HermesSupervisor',
+      targetId,
+      metadata: metadata as Prisma.InputJsonObject,
+    },
+  });
+}
+
+async function findSystemActor(workspaceId: string) {
+  return prisma.membership.findFirst({
+    where: {
+      workspaceId,
+      status: 'ACTIVE',
+      role: { in: ['OWNER', 'ADMIN'] },
+    },
+    orderBy: [{ role: 'asc' }, { createdAt: 'asc' }],
+    select: { userId: true },
+  });
+}
+
+async function runMonthlyInsightForWorkspace({
+  periodMonth,
+  periodYear,
+  scheduledAt,
+  workspaceId,
+}: {
+  periodMonth: number;
+  periodYear: number;
+  scheduledAt: Date;
+  workspaceId: string;
+}): Promise<SupervisorJobResult> {
+  const job = await prisma.hermesJob.create({
+    data: {
+      workspaceId,
+      workflow: 'MONTHLY_INSIGHT_AUTO',
+      status: 'PENDING',
+      scheduledAt,
+      metadata: { periodYear, periodMonth } as Prisma.InputJsonObject,
+    },
+  });
+
+  await prisma.hermesJob.update({
+    where: { id: job.id },
+    data: { status: 'RUNNING', startedAt: new Date() },
+  });
+
+  const actor = await findSystemActor(workspaceId);
+  if (!actor) {
+    const errorMessage = '워크스페이스 OWNER 또는 ADMIN 사용자를 찾을 수 없습니다.';
+    await prisma.hermesJob.update({
+      where: { id: job.id },
+      data: {
+        status: 'FAILED',
+        completedAt: new Date(),
+        errorCode: 'SYSTEM_ACTOR_NOT_FOUND',
+        errorMessage,
+      },
+    });
+    await writeHermesAudit({
+      action: 'hermes.workflow.failed',
+      targetId: job.id,
+      workspaceId,
+      metadata: { workflow: 'MONTHLY_INSIGHT_AUTO', errorMessage },
+    });
+    return {
+      workflow: 'MONTHLY_INSIGHT_AUTO',
+      workspaceId,
+      status: 'FAILED',
+      jobId: job.id,
+      errorMessage,
+    };
+  }
+
+  const result = await generateMonthlyInsightCore({
+    workspaceId,
+    periodYear,
+    periodMonth,
+    actorUserId: actor.userId,
+    mode: 'SYSTEM',
+  });
+
+  if (!result.ok) {
+    await prisma.hermesJob.update({
+      where: { id: job.id },
+      data: {
+        status: 'FAILED',
+        completedAt: new Date(),
+        recordsProcessed: 0,
+        errorCode: result.errorCode ?? 'UNKNOWN',
+        errorMessage: result.error,
+        metadata: {
+          periodYear,
+          periodMonth,
+          insightId: result.insightId,
+          periodLabel: periodLabel(periodYear, periodMonth),
+        } as Prisma.InputJsonObject,
+      },
+    });
+    await writeHermesAudit({
+      action: 'hermes.workflow.failed',
+      targetId: job.id,
+      workspaceId,
+      metadata: {
+        workflow: 'MONTHLY_INSIGHT_AUTO',
+        periodLabel: periodLabel(periodYear, periodMonth),
+        insightId: result.insightId,
+        errorMessage: result.error,
+      },
+    });
+    return {
+      workflow: 'MONTHLY_INSIGHT_AUTO',
+      workspaceId,
+      status: 'FAILED',
+      jobId: job.id,
+      insightId: result.insightId,
+      errorMessage: result.error,
+    };
+  }
+
+  await prisma.hermesJob.update({
+    where: { id: job.id },
+    data: {
+      status: 'SUCCESS',
+      completedAt: new Date(),
+      recordsProcessed: 1,
+      metadata: {
+        periodYear,
+        periodMonth,
+        periodLabel: periodLabel(periodYear, periodMonth),
+        insightId: result.insightId,
+        provider: result.provider,
+        modelName: result.modelName,
+        latencyMs: result.latencyMs,
+      } as Prisma.InputJsonObject,
+    },
+  });
+  await writeHermesAudit({
+    action: 'hermes.workflow.completed',
+    targetId: job.id,
+    workspaceId,
+    metadata: {
+      workflow: 'MONTHLY_INSIGHT_AUTO',
+      periodLabel: periodLabel(periodYear, periodMonth),
+      insightId: result.insightId,
+      latencyMs: result.latencyMs,
+    },
+  });
+
+  return {
+    workflow: 'MONTHLY_INSIGHT_AUTO',
+    workspaceId,
+    status: 'SUCCESS',
+    jobId: job.id,
+    insightId: result.insightId,
+  };
+}
+
+async function runInBatches<T, R>(items: T[], size: number, worker: (item: T) => Promise<R>) {
+  const results: R[] = [];
+  for (let index = 0; index < items.length; index += size) {
+    const batch = items.slice(index, index + size);
+    const settled = await Promise.allSettled(batch.map(worker));
+    settled.forEach((entry, batchIndex) => {
+      if (entry.status === 'fulfilled') {
+        results.push(entry.value);
+        return;
+      }
+      const item = batch[batchIndex] as { workspaceId?: string };
+      results.push({
+        workflow: 'MONTHLY_INSIGHT_AUTO',
+        workspaceId: item.workspaceId ?? 'unknown',
+        status: 'FAILED',
+        errorMessage: entry.reason instanceof Error ? entry.reason.message : String(entry.reason),
+      } as R);
+    });
+  }
+  return results;
+}
+
+export async function runHermesSupervisor(now = new Date()) {
+  const parts = kstParts(now);
+  const workflows: string[] = [];
+  const jobs: SupervisorJobResult[] = [];
+
+  await writeHermesAudit({
+    action: 'hermes.cron.fired',
+    metadata: {
+      firedAt: now.toISOString(),
+      kst: parts,
+    },
+  });
+
+  if (shouldRunMonthlyInsightAuto(now)) {
+    workflows.push('MONTHLY_INSIGHT_AUTO');
+    const { periodYear, periodMonth } = previousMonth(parts);
+
+    const settings = await prisma.workspaceAutomationSettings.findMany({
+      where: {
+        monthlyInsightAutoEnabled: true,
+        workspace: { deletedAt: null },
+      },
+      select: { workspaceId: true },
+    });
+
+    const runnableSettings = [];
+    for (const setting of settings) {
+      const existingSuccess = await prisma.monthlyInsight.findFirst({
+        where: {
+          workspaceId: setting.workspaceId,
+          periodYear,
+          periodMonth,
+          status: 'SUCCESS',
+        },
+        select: { id: true },
+      });
+      if (!existingSuccess) runnableSettings.push(setting);
+    }
+
+    jobs.push(
+      ...(await runInBatches(runnableSettings, 5, (setting) =>
+        runMonthlyInsightForWorkspace({
+          workspaceId: setting.workspaceId,
+          periodYear,
+          periodMonth,
+          scheduledAt: now,
+        }),
+      )),
+    );
+  }
+
+  return {
+    ok: true,
+    firedAt: now.toISOString(),
+    kst: parts,
+    workflows,
+    jobs,
+  };
+}
