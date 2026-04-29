@@ -13,6 +13,7 @@ import {
 import {
   canCancelSettlement,
   canConfirmSettlement,
+  canExportData,
   canMutateSettlement,
   computeSettlementBalance,
   formatWonDisplay,
@@ -22,6 +23,7 @@ import {
 import { prisma } from '@bttour/db';
 import Link from 'next/link';
 import { revalidatePath } from 'next/cache';
+import { GuidePdfButton } from '@/components/settlement/GuidePdfButton';
 import { assertWorkspace, requireWorkspace } from '@/lib/workspace-guard';
 import {
   GuideSettlementFormButton,
@@ -32,6 +34,7 @@ import {
 
 interface GuideSettlementRow {
   id: string;
+  guideId?: string;
   guideName: string;
   teamCount: number;
   teamList: string;
@@ -52,6 +55,15 @@ function monthParts(month: string) {
     .split('-')
     .map(Number);
   return { year, monthNo };
+}
+
+function monthStartInput(month: string) {
+  return `${month}-01`;
+}
+
+function monthEndInput(month: string) {
+  const [year, monthNo] = month.split('-').map(Number);
+  return new Date(Date.UTC(year ?? 1970, monthNo ?? 1, 0)).toISOString().slice(0, 10);
 }
 
 function optionalString(formData: FormData, key: string) {
@@ -266,6 +278,9 @@ export default async function GuideSettlementPage({
   const canMutate = canMutateSettlement(role);
   const canConfirm = canConfirmSettlement(role);
   const canCancel = canCancelSettlement(role);
+  const canExport = canExportData(role);
+  const defaultPeriodStart = monthStartInput(month);
+  const defaultPeriodEnd = monthEndInput(month);
 
   const [settlements, guides, partners, teams] = await Promise.all([
     prisma.guideSettlement.findMany({
@@ -321,6 +336,7 @@ export default async function GuideSettlementPage({
     const balance = computeSettlementBalance(settlement.totalWon, settlement.payments);
     return {
       id: settlement.id,
+      guideId: settlement.guideId ?? undefined,
       guideName: settlement.guide?.name ?? settlement.guideNameSnapshot,
       teamCount: settlement.team ? 1 : 0,
       teamList: settlement.team ? `#${settlement.team.teamNo}` : '-',
@@ -400,6 +416,16 @@ export default async function GuideSettlementPage({
       align: 'right' as const,
       cell: (row: GuideSettlementRow) => (
         <div className="flex justify-end gap-2">
+          {canExport && row.guideId && (
+            <GuidePdfButton
+              canExport={canExport}
+              defaultPeriodEnd={defaultPeriodEnd}
+              defaultPeriodStart={defaultPeriodStart}
+              guideId={row.guideId}
+              guideName={row.guideName}
+              workspaceSlug={params.slug}
+            />
+          )}
           <GuideSettlementFormButton
             action={updateGuideSettlement}
             canMutate={canMutate}
@@ -454,9 +480,6 @@ export default async function GuideSettlementPage({
         <div className="flex flex-wrap items-center gap-2">
           <Button variant="outline" disabled>
             일괄 카톡 발송
-          </Button>
-          <Button variant="outline" disabled>
-            정산서 PDF 다운로드
           </Button>
           <GuideSettlementFormButton
             action={createGuideSettlement}
