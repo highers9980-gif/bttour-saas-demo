@@ -50,6 +50,7 @@ export function buildSidebarGroups(workspaceSlug: string): SidebarGroup[] {
         { key: 'revenue', label: '매출 대시보드', emoji: '📈', href: `${w}/revenue` },
         { key: 'statistics', label: '통합 통계', emoji: '📊', href: `${w}/statistics` },
         { key: 'insights', label: '월말 인사이트', emoji: '✨', href: `${w}/insights` },
+        { key: 'automation', label: 'Hermes Supervisor', emoji: '🤖', href: `${w}/automation` },
         { key: 'guide-recommend', label: '가이드 추천', emoji: '🎯', href: `${w}/guide-recommend` },
       ],
     },
