@@ -24,7 +24,12 @@ export function buildSidebarGroups(workspaceSlug: string): SidebarGroup[] {
       key: 'settlement',
       label: '정산',
       items: [
-        { key: 'guide-settlement', label: '가이드 정산', emoji: '💰', href: `${w}/guide-settlement` },
+        {
+          key: 'guide-settlement',
+          label: '가이드 정산',
+          emoji: '💰',
+          href: `${w}/guide-settlement`,
+        },
         { key: 'vehicle', label: '차량비', emoji: '🚗', href: `${w}/vehicle` },
         { key: 'shopping-fee', label: '쇼핑 수수료', emoji: '🛒', href: `${w}/shopping-fee` },
         { key: 'receivables', label: '미수금', emoji: '💳', href: `${w}/receivables` },
@@ -44,6 +49,7 @@ export function buildSidebarGroups(workspaceSlug: string): SidebarGroup[] {
       items: [
         { key: 'revenue', label: '매출 대시보드', emoji: '📈', href: `${w}/revenue` },
         { key: 'statistics', label: '통합 통계', emoji: '📊', href: `${w}/statistics` },
+        { key: 'insights', label: '월말 인사이트', emoji: '✨', href: `${w}/insights` },
         { key: 'guide-recommend', label: '가이드 추천', emoji: '🎯', href: `${w}/guide-recommend` },
       ],
     },
@@ -52,7 +58,12 @@ export function buildSidebarGroups(workspaceSlug: string): SidebarGroup[] {
       label: '관리자',
       items: [
         { key: 'user-management', label: '사용자 관리', emoji: '👤', href: `${w}/user-management` },
-        { key: 'workspace-settings', label: '워크스페이스 설정', emoji: '⚙️', href: `${w}/settings` },
+        {
+          key: 'workspace-settings',
+          label: '워크스페이스 설정',
+          emoji: '⚙️',
+          href: `${w}/settings`,
+        },
         { key: 'billing', label: '결제·플랜', emoji: '💎', href: `${w}/billing` },
       ],
     },
