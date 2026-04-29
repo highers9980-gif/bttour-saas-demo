@@ -50,7 +50,7 @@ export function Modal({
       role="dialog"
       aria-modal="true"
       aria-labelledby={title ? 'modal-title' : undefined}
-      className="fixed inset-0 z-50 grid place-items-center p-4"
+      className="fixed inset-0 z-50 flex items-end justify-center sm:items-center sm:p-4"
     >
       <div
         className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"
@@ -58,12 +58,12 @@ export function Modal({
       />
       <div
         className={cn(
-          'relative w-full bg-white rounded-2xl shadow-float',
+          'relative flex h-[100dvh] w-full flex-col overflow-hidden bg-white shadow-float sm:h-auto sm:max-h-[90vh] sm:rounded-2xl',
           sizeClass[size],
         )}
       >
         {title && (
-          <header className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+          <header className="sticky top-0 z-10 flex items-center justify-between border-b border-slate-100 bg-white px-4 py-4 sm:px-6">
             <h2
               id="modal-title"
               className="text-lg font-bold text-navy-900"
@@ -74,15 +74,15 @@ export function Modal({
               type="button"
               onClick={onClose}
               aria-label="닫기"
-              className="w-8 h-8 grid place-items-center rounded hover:bg-slate-100 text-slate-500"
+              className="grid h-11 w-11 place-items-center rounded-lg text-slate-500 hover:bg-slate-100"
             >
               ✕
             </button>
           </header>
         )}
-        <div className="p-6">{children}</div>
+        <div className="flex-1 overflow-y-auto p-4 sm:p-6">{children}</div>
         {footer && (
-          <footer className="px-6 py-4 border-t border-slate-100 flex justify-end gap-2">
+          <footer className="sticky bottom-0 flex justify-end gap-2 border-t border-slate-100 bg-white px-4 py-4 sm:px-6">
             {footer}
           </footer>
         )}
