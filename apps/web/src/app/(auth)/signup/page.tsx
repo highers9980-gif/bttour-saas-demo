@@ -210,7 +210,7 @@ export default async function SignUpPage() {
                 <select
                   name="plan"
                   defaultValue="trial"
-                  className="h-11 w-full rounded-lg border border-slate-200 px-3.5 text-sm focus:border-navy-900 focus:outline-none focus:ring-1 focus:ring-navy-900"
+                  className="h-11 w-full rounded-lg border border-slate-200 px-3.5 text-base focus:border-navy-900 focus:outline-none focus:ring-1 focus:ring-navy-900 md:text-sm"
                 >
                   {signupPlanOptions.map((plan) => (
                     <option key={plan.value} value={plan.value}>
@@ -257,7 +257,7 @@ export default async function SignUpPage() {
                 <select
                   name="requestedRole"
                   defaultValue="MANAGER"
-                  className="h-11 w-full rounded-lg border border-slate-200 px-3.5 text-sm focus:border-navy-900 focus:outline-none focus:ring-1 focus:ring-navy-900"
+                  className="h-11 w-full rounded-lg border border-slate-200 px-3.5 text-base focus:border-navy-900 focus:outline-none focus:ring-1 focus:ring-navy-900 md:text-sm"
                 >
                   {requestedRoleOptions.map((role) => (
                     <option key={role.value} value={role.value}>
@@ -270,7 +270,7 @@ export default async function SignUpPage() {
                 <textarea
                   name="intro"
                   rows={3}
-                  className="w-full resize-none rounded-lg border border-slate-200 px-3.5 py-2.5 text-sm focus:border-navy-900 focus:outline-none focus:ring-1 focus:ring-navy-900"
+                  className="w-full resize-none rounded-lg border border-slate-200 px-3.5 py-2.5 text-base focus:border-navy-900 focus:outline-none focus:ring-1 focus:ring-navy-900 md:text-sm"
                 />
               </Field>
             </div>
