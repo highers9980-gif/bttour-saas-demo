@@ -1,4 +1,4 @@
-import { Badge, Button, Card, DataTable, EmptyState, KpiCard } from '@bttour/ui';
+import { Badge, Button, Card, DataTable, EmptyState, KpiCard, MobileCardList } from '@bttour/ui';
 import { canMutateIntegrationSettings } from '@bttour/shared';
 import { prisma, type Prisma } from '@bttour/db';
 import { revalidatePath } from 'next/cache';
@@ -247,24 +247,72 @@ export default async function AutomationPage({ params }: { params: { slug: strin
         <div className="border-b border-slate-100 px-5 py-4">
           <h2 className="font-bold text-navy-900">HermesJob 이력</h2>
         </div>
-        <DataTable
-          rows={jobs}
-          columns={jobColumns}
-          rowKey={(job) => job.id}
-          empty={<EmptyState title="아직 HermesJob 이력이 없습니다" variant="inline" />}
-        />
+        <div className="hidden md:block">
+          <DataTable
+            rows={jobs}
+            columns={jobColumns}
+            rowKey={(job) => job.id}
+            empty={<EmptyState title="아직 HermesJob 이력이 없습니다" variant="inline" />}
+          />
+        </div>
+        <div className="p-4 md:hidden">
+          <MobileCardList
+            rows={jobs}
+            rowKey={(job) => job.id}
+            empty={<EmptyState title="아직 HermesJob 이력이 없습니다" variant="inline" />}
+            renderCard={(job) => (
+              <div className="space-y-2">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <div className="font-bold text-navy-900">{job.workflow}</div>
+                    <div className="text-xs text-slate-500">{dateLabel(job.scheduledAt)}</div>
+                  </div>
+                  <Badge tone={statusTone(job.status)}>{job.status}</Badge>
+                </div>
+                <div className="text-xs text-slate-500">
+                  완료 {dateLabel(job.completedAt)} · {job.errorMessage ?? jsonPreview(job.metadata)}
+                </div>
+              </div>
+            )}
+          />
+        </div>
       </Card>
 
       <Card padding="none" className="overflow-hidden">
         <div className="border-b border-slate-100 px-5 py-4">
           <h2 className="font-bold text-navy-900">ScheduleChangeLog 이력</h2>
         </div>
-        <DataTable
-          rows={changeLogs}
-          columns={logColumns}
-          rowKey={(log) => log.id}
-          empty={<EmptyState title="아직 일정 변경 로그가 없습니다" variant="inline" />}
-        />
+        <div className="hidden md:block">
+          <DataTable
+            rows={changeLogs}
+            columns={logColumns}
+            rowKey={(log) => log.id}
+            empty={<EmptyState title="아직 일정 변경 로그가 없습니다" variant="inline" />}
+          />
+        </div>
+        <div className="p-4 md:hidden">
+          <MobileCardList
+            rows={changeLogs}
+            rowKey={(log) => log.id}
+            empty={<EmptyState title="아직 일정 변경 로그가 없습니다" variant="inline" />}
+            renderCard={(log) => (
+              <div className="space-y-2">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <div className="font-bold text-navy-900">{dateLabel(log.changedAt)}</div>
+                    <div className="text-xs text-slate-500">
+                      {log.changedBy.name ?? log.changedBy.email ?? log.changedById}
+                    </div>
+                  </div>
+                  <Badge tone="blue">{log.changeType}</Badge>
+                </div>
+                <div className="text-xs text-slate-500">
+                  {jsonPreview(log.afterData ?? log.beforeData)}
+                </div>
+              </div>
+            )}
+          />
+        </div>
       </Card>
     </div>
   );

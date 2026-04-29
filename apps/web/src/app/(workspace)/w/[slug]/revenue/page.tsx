@@ -1,4 +1,4 @@
-import { Badge, Card, DataTable, EmptyState, KpiCard, todayIso } from '@bttour/ui';
+import { Badge, Card, DataTable, EmptyState, KpiCard, MobileCardList, todayIso } from '@bttour/ui';
 import { computeReceivableBalance, formatWonDisplay } from '@bttour/shared';
 import { prisma } from '@bttour/db';
 import { requireWorkspace } from '@/lib/workspace-guard';
@@ -306,24 +306,26 @@ export default async function RevenuePage({
             <span className="text-orange-600">■ 이익</span>
           </div>
         </div>
-        <div className="space-y-3">
-          {monthlyRows.map((row) => (
-            <div
-              key={row.key}
-              className="grid gap-2 text-sm md:grid-cols-[64px_1fr_1fr_92px] md:items-center"
-            >
-              <div className="font-semibold text-slate-600">{row.label}</div>
-              <ProgressBar max={maxRevenue} value={row.revenueWon} />
-              <ProgressBar
-                max={maxProfit}
-                tone={row.profitWon >= 0 ? 'orange' : 'red'}
-                value={Math.abs(row.profitWon)}
-              />
-              <div className="text-right text-xs font-semibold text-slate-600">
-                {row.teamCount}팀
+        <div className="overflow-x-auto md:overflow-visible">
+          <div className="min-w-[600px] space-y-3 md:min-w-0">
+            {monthlyRows.map((row) => (
+              <div
+                key={row.key}
+                className="grid snap-start grid-cols-[56px_1fr_1fr_72px] items-center gap-2 text-sm md:grid-cols-[64px_1fr_1fr_92px]"
+              >
+                <div className="font-semibold text-slate-600">{row.label}</div>
+                <ProgressBar max={maxRevenue} value={row.revenueWon} />
+                <ProgressBar
+                  max={maxProfit}
+                  tone={row.profitWon >= 0 ? 'orange' : 'red'}
+                  value={Math.abs(row.profitWon)}
+                />
+                <div className="text-right text-xs font-semibold text-slate-600">
+                  {row.teamCount}팀
+                </div>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       </Card>
 
@@ -349,36 +351,56 @@ export default async function RevenuePage({
           <div className="border-b border-slate-100 px-5 py-4">
             <h2 className="font-bold text-navy-900">가이드별 실적 Top 5</h2>
           </div>
-          <DataTable
-            rows={guidePerformance}
-            rowKey={(row) => row.guideName}
-            empty={<EmptyState title="가이드 정산 데이터가 없습니다" variant="inline" />}
-            columns={[
-              {
-                key: 'guideName',
-                header: '가이드',
-                cell: (row: GuidePerformanceRow) => <Badge tone="cyan">{row.guideName}</Badge>,
-              },
-              {
-                key: 'teamCount',
-                header: '팀',
-                align: 'right' as const,
-                cell: (row: GuidePerformanceRow) => row.teamCount,
-              },
-              {
-                key: 'paxCount',
-                header: '인원',
-                align: 'right' as const,
-                cell: (row: GuidePerformanceRow) => row.paxCount,
-              },
-              {
-                key: 'totalWon',
-                header: '정산액',
-                align: 'right' as const,
-                cell: (row: GuidePerformanceRow) => money(row.totalWon),
-              },
-            ]}
-          />
+          <div className="hidden md:block">
+            <DataTable
+              rows={guidePerformance}
+              rowKey={(row) => row.guideName}
+              empty={<EmptyState title="가이드 정산 데이터가 없습니다" variant="inline" />}
+              columns={[
+                {
+                  key: 'guideName',
+                  header: '가이드',
+                  cell: (row: GuidePerformanceRow) => <Badge tone="cyan">{row.guideName}</Badge>,
+                },
+                {
+                  key: 'teamCount',
+                  header: '팀',
+                  align: 'right' as const,
+                  cell: (row: GuidePerformanceRow) => row.teamCount,
+                },
+                {
+                  key: 'paxCount',
+                  header: '인원',
+                  align: 'right' as const,
+                  cell: (row: GuidePerformanceRow) => row.paxCount,
+                },
+                {
+                  key: 'totalWon',
+                  header: '정산액',
+                  align: 'right' as const,
+                  cell: (row: GuidePerformanceRow) => money(row.totalWon),
+                },
+              ]}
+            />
+          </div>
+          <div className="p-4 md:hidden">
+            <MobileCardList
+              rows={guidePerformance}
+              rowKey={(row) => row.guideName}
+              empty={<EmptyState title="가이드 정산 데이터가 없습니다" variant="inline" />}
+              renderCard={(row) => (
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between gap-3">
+                    <Badge tone="cyan">{row.guideName}</Badge>
+                    <span className="text-sm font-bold text-navy-900">{money(row.totalWon)}</span>
+                  </div>
+                  <div className="text-xs text-slate-500">
+                    {row.teamCount}팀 · {row.paxCount}명
+                  </div>
+                </div>
+              )}
+            />
+          </div>
         </Card>
       </div>
     </div>

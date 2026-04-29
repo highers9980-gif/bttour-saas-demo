@@ -1,4 +1,4 @@
-import { Badge, Card, DataTable, EmptyState, KpiCard } from '@bttour/ui';
+import { Badge, Card, DataTable, EmptyState, KpiCard, MobileCardList } from '@bttour/ui';
 import { formatWonDisplay } from '@bttour/shared';
 import { prisma } from '@bttour/db';
 import Link from 'next/link';
@@ -259,7 +259,7 @@ export default async function StatisticsPage({
         <KpiCard label="거래 에이전트" value={agents.length} unit="곳" />
       </div>
 
-      <div className="flex border-b border-slate-200">
+      <div className="flex overflow-x-auto border-b border-slate-200">
         {tabs.map((tab) => (
           <Link
             key={tab.key}
@@ -277,104 +277,164 @@ export default async function StatisticsPage({
 
       {activeTab === 'guides' && (
         <Card padding="none" className="overflow-hidden">
-          <DataTable
-            rows={guideRows}
-            rowKey={(row) => row.guideName}
-            empty={<EmptyState title="가이드 통계 데이터가 없습니다" />}
-            columns={[
-              {
-                key: 'guideName',
-                header: '가이드',
-                cell: (row: GuideStatsRow) => <Badge tone="cyan">{row.guideName}</Badge>,
-              },
-              {
-                key: 'assignmentCount',
-                header: '배정',
-                align: 'right' as const,
-                cell: (row: GuideStatsRow) => row.assignmentCount,
-              },
-              {
-                key: 'paxCount',
-                header: '인원',
-                align: 'right' as const,
-                cell: (row: GuideStatsRow) => row.paxCount,
-              },
-              {
-                key: 'settlementWon',
-                header: '정산액',
-                align: 'right' as const,
-                cell: (row: GuideStatsRow) => money(row.settlementWon),
-              },
-            ]}
-          />
+          <div className="hidden md:block">
+            <DataTable
+              rows={guideRows}
+              rowKey={(row) => row.guideName}
+              empty={<EmptyState title="가이드 통계 데이터가 없습니다" />}
+              columns={[
+                {
+                  key: 'guideName',
+                  header: '가이드',
+                  cell: (row: GuideStatsRow) => <Badge tone="cyan">{row.guideName}</Badge>,
+                },
+                {
+                  key: 'assignmentCount',
+                  header: '배정',
+                  align: 'right' as const,
+                  cell: (row: GuideStatsRow) => row.assignmentCount,
+                },
+                {
+                  key: 'paxCount',
+                  header: '인원',
+                  align: 'right' as const,
+                  cell: (row: GuideStatsRow) => row.paxCount,
+                },
+                {
+                  key: 'settlementWon',
+                  header: '정산액',
+                  align: 'right' as const,
+                  cell: (row: GuideStatsRow) => money(row.settlementWon),
+                },
+              ]}
+            />
+          </div>
+          <div className="p-4 md:hidden">
+            <MobileCardList
+              rows={guideRows}
+              rowKey={(row) => row.guideName}
+              empty={<EmptyState title="가이드 통계 데이터가 없습니다" variant="inline" />}
+              renderCard={(row) => (
+                <div className="space-y-2">
+                  <div className="flex justify-between gap-3">
+                    <Badge tone="cyan">{row.guideName}</Badge>
+                    <span className="font-bold text-navy-900">{money(row.settlementWon)}</span>
+                  </div>
+                  <div className="text-xs text-slate-500">
+                    배정 {row.assignmentCount}건 · 인원 {row.paxCount}명
+                  </div>
+                </div>
+              )}
+            />
+          </div>
         </Card>
       )}
 
       {activeTab === 'agents' && (
         <Card padding="none" className="overflow-hidden">
-          <DataTable
-            rows={agentRows}
-            rowKey={(row) => row.agentName}
-            empty={<EmptyState title="에이전트 통계 데이터가 없습니다" />}
-            columns={[
-              { key: 'agentName', header: '에이전트', cell: (row: AgentStatsRow) => row.agentName },
-              {
-                key: 'teamCount',
-                header: '팀',
-                align: 'right' as const,
-                cell: (row: AgentStatsRow) => row.teamCount,
-              },
-              {
-                key: 'paxCount',
-                header: '인원',
-                align: 'right' as const,
-                cell: (row: AgentStatsRow) => row.paxCount,
-              },
-              {
-                key: 'revenueWon',
-                header: '쇼핑 매출 기여',
-                align: 'right' as const,
-                cell: (row: AgentStatsRow) => money(row.revenueWon),
-              },
-              {
-                key: 'shareLabel',
-                header: '비중',
-                align: 'right' as const,
-                cell: (row: AgentStatsRow) => row.shareLabel,
-              },
-            ]}
-          />
+          <div className="hidden md:block">
+            <DataTable
+              rows={agentRows}
+              rowKey={(row) => row.agentName}
+              empty={<EmptyState title="에이전트 통계 데이터가 없습니다" />}
+              columns={[
+                { key: 'agentName', header: '에이전트', cell: (row: AgentStatsRow) => row.agentName },
+                {
+                  key: 'teamCount',
+                  header: '팀',
+                  align: 'right' as const,
+                  cell: (row: AgentStatsRow) => row.teamCount,
+                },
+                {
+                  key: 'paxCount',
+                  header: '인원',
+                  align: 'right' as const,
+                  cell: (row: AgentStatsRow) => row.paxCount,
+                },
+                {
+                  key: 'revenueWon',
+                  header: '쇼핑 매출 기여',
+                  align: 'right' as const,
+                  cell: (row: AgentStatsRow) => money(row.revenueWon),
+                },
+                {
+                  key: 'shareLabel',
+                  header: '비중',
+                  align: 'right' as const,
+                  cell: (row: AgentStatsRow) => row.shareLabel,
+                },
+              ]}
+            />
+          </div>
+          <div className="p-4 md:hidden">
+            <MobileCardList
+              rows={agentRows}
+              rowKey={(row) => row.agentName}
+              empty={<EmptyState title="에이전트 통계 데이터가 없습니다" variant="inline" />}
+              renderCard={(row) => (
+                <div className="space-y-2">
+                  <div className="flex justify-between gap-3">
+                    <span className="font-bold text-navy-900">{row.agentName}</span>
+                    <span className="font-bold text-navy-900">{money(row.revenueWon)}</span>
+                  </div>
+                  <div className="text-xs text-slate-500">
+                    {row.teamCount}팀 · {row.paxCount}명 · 비중 {row.shareLabel}
+                  </div>
+                </div>
+              )}
+            />
+          </div>
         </Card>
       )}
 
       {activeTab === 'hotels' && (
         <Card padding="none" className="overflow-hidden">
-          <DataTable
-            rows={hotelRows}
-            rowKey={(row) => row.hotelName}
-            empty={<EmptyState title="호텔 투숙 데이터가 없습니다" />}
-            columns={[
-              { key: 'hotelName', header: '호텔', cell: (row: HotelStatsRow) => row.hotelName },
-              {
-                key: 'stayCount',
-                header: '예약',
-                align: 'right' as const,
-                cell: (row: HotelStatsRow) => row.stayCount,
-              },
-              {
-                key: 'roomNights',
-                header: '객실박',
-                align: 'right' as const,
-                cell: (row: HotelStatsRow) => row.roomNights,
-              },
-              {
-                key: 'estimatedRevenueWon',
-                header: '추정 매출',
-                align: 'right' as const,
-                cell: (row: HotelStatsRow) => money(row.estimatedRevenueWon),
-              },
-            ]}
-          />
+          <div className="hidden md:block">
+            <DataTable
+              rows={hotelRows}
+              rowKey={(row) => row.hotelName}
+              empty={<EmptyState title="호텔 투숙 데이터가 없습니다" />}
+              columns={[
+                { key: 'hotelName', header: '호텔', cell: (row: HotelStatsRow) => row.hotelName },
+                {
+                  key: 'stayCount',
+                  header: '예약',
+                  align: 'right' as const,
+                  cell: (row: HotelStatsRow) => row.stayCount,
+                },
+                {
+                  key: 'roomNights',
+                  header: '객실박',
+                  align: 'right' as const,
+                  cell: (row: HotelStatsRow) => row.roomNights,
+                },
+                {
+                  key: 'estimatedRevenueWon',
+                  header: '추정 매출',
+                  align: 'right' as const,
+                  cell: (row: HotelStatsRow) => money(row.estimatedRevenueWon),
+                },
+              ]}
+            />
+          </div>
+          <div className="p-4 md:hidden">
+            <MobileCardList
+              rows={hotelRows}
+              rowKey={(row) => row.hotelName}
+              empty={<EmptyState title="호텔 투숙 데이터가 없습니다" variant="inline" />}
+              renderCard={(row) => (
+                <div className="space-y-2">
+                  <div className="flex justify-between gap-3">
+                    <span className="font-bold text-navy-900">{row.hotelName}</span>
+                    <span className="font-bold text-navy-900">{money(row.estimatedRevenueWon)}</span>
+                  </div>
+                  <div className="text-xs text-slate-500">
+                    예약 {row.stayCount}건 · 객실박 {row.roomNights}
+                  </div>
+                </div>
+              )}
+            />
+          </div>
         </Card>
       )}
 
