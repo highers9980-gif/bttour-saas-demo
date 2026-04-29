@@ -40,6 +40,7 @@ model User {
   invitesSent Invitation[] @relation("InvitedBy")
   receiptOcrJobs ReceiptOcrJob[]
   settlementPdfJobs SettlementPdfJob[]
+  monthlyInsights MonthlyInsight[]
 
   @@map("users")
 }
@@ -148,6 +149,7 @@ model Workspace {
   backupExports          BackupExportJob[]
   receiptOcrJobs         ReceiptOcrJob[]
   settlementPdfJobs      SettlementPdfJob[]
+  monthlyInsights        MonthlyInsight[]
 
   @@index([deletedAt])
   @@map("workspaces")
@@ -1190,6 +1192,12 @@ enum SettlementPdfType {
   RECEIVABLE
 }
 
+enum MonthlyInsightStatus {
+  GENERATING
+  SUCCESS
+  FAILED
+}
+
 // ─────────────────────────────────────────────────────────────────────────
 // AI 통합 설정
 // ─────────────────────────────────────────────────────────────────────────
@@ -1437,4 +1445,33 @@ model SettlementPdfJob {
   @@index([workspaceId, type, createdAt(sort: Desc)])
   @@index([workspaceId, guideId])
   @@map("settlement_pdf_jobs")
+}
+
+model MonthlyInsight {
+  id          String               @id @default(cuid())
+  workspaceId String
+  workspace   Workspace            @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  periodYear  Int
+  periodMonth Int
+  status      MonthlyInsightStatus @default(GENERATING)
+
+  statisticsJson  Json?
+  summaryMarkdown String?          @db.Text
+
+  provider   IntegrationProvider?
+  modelName  String?
+  keyVersion Int?
+
+  errorCode    String?
+  errorMessage String?
+  latencyMs    Int?
+
+  createdById String
+  createdBy   User                 @relation(fields: [createdById], references: [id])
+  createdAt   DateTime             @default(now())
+
+  @@index([workspaceId, periodYear, periodMonth])
+  @@index([workspaceId, createdAt(sort: Desc)])
+  @@map("monthly_insights")
 }
