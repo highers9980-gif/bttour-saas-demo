@@ -1,9 +1,5 @@
 import { Badge, Button, Card, EmptyState, KpiCard, todayIso } from '@bttour/ui';
-import {
-  canMutateSettlement,
-  formatWonDisplay,
-  type MonthlyInsightStatistics,
-} from '@bttour/shared';
+import { canMutateSettlement, type MonthlyInsightStatistics } from '@bttour/shared';
 import { prisma } from '@bttour/db';
 import Link from 'next/link';
 import { InsightGenerateButton } from '@/components/insights/InsightGenerateButton';
@@ -20,8 +16,11 @@ function parsePeriod(raw?: string) {
   };
 }
 
+// 인사이트 페이지는 정밀 모드 — KPI 카드와 AI 본문의 숫자가 일치하도록
+// 5000원 라운딩 없이 원본값을 천단위 콤마로 표시. 다른 운영 대시보드는
+// 가독성 위해 formatWonDisplay({ roundStep: 5000 }) 유지.
 function money(amount: number) {
-  return formatWonDisplay(amount, { roundStep: 5000 });
+  return new Intl.NumberFormat('ko-KR').format(amount);
 }
 
 function formatDateTime(date: Date) {
@@ -36,37 +35,85 @@ function asStatistics(value: unknown): MonthlyInsightStatistics | null {
   return value as MonthlyInsightStatistics;
 }
 
+type MarkdownBlock =
+  | { type: 'header'; text: string }
+  | { type: 'list'; items: string[] }
+  | { type: 'paragraph'; text: string };
+
+// AI가 빈 줄 없이 ## 헤더와 본문을 붙여서 출력해도 정확히 분리하도록
+// 라인 단위 파서. ## 헤더 / - 리스트 / 일반 단락 3종을 각각 블록으로.
+function parseMarkdownBlocks(markdown: string): MarkdownBlock[] {
+  const blocks: MarkdownBlock[] = [];
+  const lines = markdown.split('\n').map((line) => line.trim());
+  let pending: { type: 'list' | 'paragraph'; lines: string[] } | null = null;
+
+  function flush() {
+    if (!pending) return;
+    if (pending.type === 'list') {
+      blocks.push({
+        type: 'list',
+        items: pending.lines.map((line) => line.replace(/^-\s+/, '')),
+      });
+    } else if (pending.lines.length > 0) {
+      blocks.push({ type: 'paragraph', text: pending.lines.join(' ') });
+    }
+    pending = null;
+  }
+
+  for (const line of lines) {
+    if (!line) {
+      flush();
+      continue;
+    }
+    if (line.startsWith('## ')) {
+      flush();
+      blocks.push({ type: 'header', text: line.slice(3).trim() });
+    } else if (line.startsWith('- ')) {
+      if (pending?.type !== 'list') {
+        flush();
+        pending = { type: 'list', lines: [] };
+      }
+      pending.lines.push(line);
+    } else {
+      if (pending?.type !== 'paragraph') {
+        flush();
+        pending = { type: 'paragraph', lines: [] };
+      }
+      pending.lines.push(line);
+    }
+  }
+  flush();
+  return blocks;
+}
+
 function MarkdownView({ markdown }: { markdown: string }) {
-  const blocks = markdown
-    .split(/\n{2,}/)
-    .map((block) => block.trim())
-    .filter(Boolean);
+  const blocks = parseMarkdownBlocks(markdown);
 
   return (
-    <div className="space-y-5 text-sm leading-7 text-slate-700">
+    <div className="space-y-4 text-sm leading-7 text-slate-700">
       {blocks.map((block, index) => {
-        if (block.startsWith('## ')) {
+        if (block.type === 'header') {
           return (
-            <h2 key={`${index}-${block}`} className="text-base font-bold text-navy-900">
-              {block.replace(/^##\s+/, '')}
+            <h2
+              key={`h-${index}`}
+              className="border-l-4 border-navy-900 pl-3 text-base font-bold text-navy-900"
+            >
+              {block.text}
             </h2>
           );
         }
-
-        const lines = block.split('\n').map((line) => line.trim());
-        if (lines.every((line) => line.startsWith('- '))) {
+        if (block.type === 'list') {
           return (
-            <ul key={`${index}-${block}`} className="list-disc space-y-1 pl-5">
-              {lines.map((line) => (
-                <li key={line}>{line.replace(/^-\s+/, '')}</li>
+            <ul key={`l-${index}`} className="list-disc space-y-1 pl-5">
+              {block.items.map((item, itemIndex) => (
+                <li key={`${index}-${itemIndex}`}>{item}</li>
               ))}
             </ul>
           );
         }
-
         return (
-          <p key={`${index}-${block}`} className="whitespace-pre-line">
-            {block}
+          <p key={`p-${index}`} className="whitespace-pre-line">
+            {block.text}
           </p>
         );
       })}
