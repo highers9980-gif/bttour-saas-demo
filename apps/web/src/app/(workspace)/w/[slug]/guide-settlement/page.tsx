@@ -594,6 +594,18 @@ export default async function GuideSettlementPage({
                 </div>
               </div>
             </div>
+            {canExport && row.guideId && (
+              <div className="flex justify-end">
+                <GuidePdfButton
+                  canExport={canExport}
+                  defaultPeriodEnd={defaultPeriodEnd}
+                  defaultPeriodStart={defaultPeriodStart}
+                  guideId={row.guideId}
+                  guideName={row.guideName}
+                  workspaceSlug={params.slug}
+                />
+              </div>
+            )}
           </div>
         )}
       />
