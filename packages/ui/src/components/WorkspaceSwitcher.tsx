@@ -3,6 +3,7 @@ import { cn } from '../lib/cn';
 
 export interface WorkspaceOption {
   id: string;
+  slug?: string;
   name: string;
   role: 'OWNER' | 'ADMIN' | 'MANAGER' | 'VIEWER';
 }

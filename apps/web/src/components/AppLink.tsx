@@ -11,15 +11,17 @@ export function AppLink({
   href,
   className,
   onClick,
+  'aria-current': ariaCurrent,
   children,
 }: {
   href: string;
   className?: string;
   onClick?: () => void;
+  'aria-current'?: 'page';
   children: ReactNode;
 }) {
   return (
-    <NextLink href={href} className={className} onClick={onClick}>
+    <NextLink href={href} className={className} onClick={onClick} aria-current={ariaCurrent}>
       {children}
     </NextLink>
   );

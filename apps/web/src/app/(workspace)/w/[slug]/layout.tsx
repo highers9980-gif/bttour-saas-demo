@@ -64,11 +64,13 @@ export default async function WorkspaceLayout({
     <WorkspaceShell
       workspaces={memberships.map((m: (typeof memberships)[number]) => ({
         id: m.workspace.id,
+        slug: m.workspace.slug,
         name: m.workspace.name,
         role: m.role,
       }))}
       currentWorkspace={{
         id: current.workspace.id,
+        slug: current.workspace.slug,
         name: current.workspace.name,
         role: current.role,
       }}

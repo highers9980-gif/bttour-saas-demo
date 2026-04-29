@@ -1,9 +1,18 @@
 'use client';
 
-import { Sidebar, TopHeader, type SidebarGroup, type WorkspaceOption } from '@bttour/ui';
+import {
+  BottomTabBar,
+  Sidebar,
+  TopHeader,
+  type BottomTabItem,
+  type SidebarGroup,
+  type WorkspaceOption,
+} from '@bttour/ui';
 import { useEffect, useState, type ReactNode } from 'react';
+import { usePathname } from 'next/navigation';
 import { AppLink } from './AppLink';
 import { LanguageSwitcher } from './LanguageSwitcher';
+import { MobileMoreMenu } from './MobileMoreMenu';
 
 export interface WorkspaceShellProps {
   workspaces: WorkspaceOption[];
@@ -30,7 +39,47 @@ export function WorkspaceShell({
   children,
 }: WorkspaceShellProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [moreOpen, setMoreOpen] = useState(false);
+  const pathname = usePathname();
   const userInitial = user.name.slice(0, 1);
+  const workspaceSlug = currentWorkspace.slug ?? currentWorkspace.id;
+  const bottomTabs: BottomTabItem[] = [
+    {
+      key: 'dashboard',
+      emoji: '📊',
+      label: '대시보드',
+      href: `/w/${workspaceSlug}/dashboard`,
+      active: pathname === `/w/${workspaceSlug}/dashboard`,
+    },
+    {
+      key: 'schedule',
+      emoji: '📅',
+      label: '일정',
+      href: `/w/${workspaceSlug}/schedule`,
+      active: pathname.startsWith(`/w/${workspaceSlug}/schedule`),
+    },
+    {
+      key: 'settlement',
+      emoji: '💰',
+      label: '정산',
+      href: `/w/${workspaceSlug}/guide-settlement`,
+      active: pathname.startsWith(`/w/${workspaceSlug}/guide-settlement`),
+    },
+    {
+      key: 'expense',
+      emoji: '🧾',
+      label: '비용',
+      href: `/w/${workspaceSlug}/expense`,
+      active: pathname.startsWith(`/w/${workspaceSlug}/expense`),
+    },
+    {
+      key: 'more',
+      emoji: '☰',
+      label: '더보기',
+      kind: 'more',
+      active: moreOpen,
+    },
+  ];
 
   useEffect(() => {
     if (!sidebarOpen) return;
@@ -97,8 +146,14 @@ export function WorkspaceShell({
             </>
           }
         />
-        <div className="flex-1 overflow-y-auto bg-slate-100 p-4 scroll-thin md:p-8">{children}</div>
+        <div className="flex-1 overflow-y-auto bg-slate-100 p-4 pb-[88px] scroll-thin md:pb-8 md:p-8">{children}</div>
       </div>
+      <BottomTabBar
+        LinkComponent={AppLink}
+        items={bottomTabs}
+        onMoreClick={() => setMoreOpen(true)}
+      />
+      <MobileMoreMenu open={moreOpen} onClose={() => setMoreOpen(false)} groups={groups} />
     </div>
   );
 }
