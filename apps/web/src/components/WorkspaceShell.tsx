@@ -42,7 +42,7 @@ export function WorkspaceShell({
   const [moreOpen, setMoreOpen] = useState(false);
   const pathname = usePathname();
   const userInitial = user.name.slice(0, 1);
-  const workspaceSlug = currentWorkspace.slug ?? currentWorkspace.id;
+  const workspaceSlug = currentWorkspace.slug;
   const bottomTabs: BottomTabItem[] = [
     {
       key: 'dashboard',
